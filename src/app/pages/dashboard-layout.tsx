@@ -10,7 +10,7 @@ export function DashboardLayout() {
     { path: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { path: "/dashboard/plans", label: "My Policy", icon: FileText },
     { path: "/dashboard/claims", label: "Claims", icon: AlertCircle },
-    { path: "/dashboard/risk", label: "AI Risk Insights", icon: Shield },
+    { path: "/dashboard/risk", label: "AI Risk", icon: Shield },
     { path: "/dashboard/history", label: "History", icon: History },
   ];
 
@@ -21,12 +21,12 @@ export function DashboardLayout() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
-      {/* Sidebar */}
+      {/* Sidebar — desktop only */}
       <aside className="w-64 bg-white border-r hidden md:flex flex-col">
         <div className="p-6 border-b">
           <div className="flex items-center gap-2">
             <Shield className="w-8 h-8 text-blue-600" />
-            <span className="text-xl font-bold text-blue-900">InsureGig AI</span>
+            <span className="text-xl font-bold text-blue-900">InsureGig</span>
           </div>
         </div>
 
@@ -70,20 +70,53 @@ export function DashboardLayout() {
         </div>
       </aside>
 
-      {/* Mobile Header */}
-      <div className="md:hidden fixed top-0 left-0 right-0 bg-white border-b p-4 z-10">
+      {/* Mobile Top Header */}
+      <div className="md:hidden fixed top-0 left-0 right-0 bg-white border-b p-4 z-20 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Shield className="w-6 h-6 text-blue-600" />
-          <span className="text-lg font-bold text-blue-900">InsureGig AI</span>
+          <span className="text-lg font-bold text-blue-900">InsureGig</span>
         </div>
+        <button
+          onClick={handleLogout}
+          className="flex items-center gap-1 text-sm text-red-500 hover:text-red-600 transition-colors"
+        >
+          <LogOut className="w-4 h-4" />
+          <span>Logout</span>
+        </button>
       </div>
 
       {/* Main Content */}
       <main className="flex-1 overflow-auto">
-        <div className="md:pt-0 pt-16">
+        {/* Top padding for mobile header, bottom padding for mobile nav */}
+        <div className="md:pt-0 pt-16 pb-20 md:pb-0">
           <Outlet />
         </div>
       </main>
+
+      {/* Mobile Bottom Navigation Bar */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t z-20 flex items-center">
+        {menuItems.map((item) => {
+          const Icon = item.icon;
+          const isActive = location.pathname === item.path;
+          return (
+            <button
+              key={item.path}
+              onClick={() => navigate(item.path)}
+              className={`flex-1 flex flex-col items-center justify-center py-2 gap-0.5 transition-colors ${
+                isActive
+                  ? "text-blue-600"
+                  : "text-gray-500 hover:text-blue-500"
+              }`}
+            >
+              <Icon className={`w-5 h-5 ${isActive ? "stroke-[2.5]" : ""}`} />
+              <span className="text-[10px] font-medium leading-tight">{item.label}</span>
+              {isActive && (
+                <span className="absolute bottom-0 w-6 h-0.5 bg-blue-600 rounded-full" />
+              )}
+            </button>
+          );
+        })}
+      </nav>
     </div>
   );
 }

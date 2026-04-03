@@ -10,17 +10,15 @@ st.set_page_config(page_title="InsureGig ML Engine", page_icon="🧠", layout="w
 st.title("🧠 InsureGig API: Parametric AI Engine")
 st.markdown("This standalone dashboard allows judges to interact directly with the Machine Learning algorithm powering InsureGig's counterfactual payout calculations.")
 
-# 1. Generate Synthetic Data
+# Generate Synthetic Data
 @st.cache_data
 def generate_data(samples=5000):
     np.random.seed(42)
-    severity = np.random.uniform(0, 100, samples) # 0 to 100%
-    demand_left = np.random.uniform(0, 100, samples) # 0 to 100%
+    severity = np.random.uniform(0, 100, samples) 
+    demand_left = np.random.uniform(0, 100, samples) 
     
-    # Base logic: higher severity + lower demand = higher loss
     loss_percent = (severity * 0.6) + ((100 - demand_left) * 0.4)
     
-    # Add human noise so the ML has to learn the non-linear boundaries
     loss_percent += np.random.normal(0, 8, samples)
     
     # Clip between 0 and 100
@@ -34,28 +32,26 @@ def generate_data(samples=5000):
 
 df = generate_data()
 
-# 2. Train Model
+#  Train Model
 X = df[['Weather Severity (%)', 'Platform Demand Left (%)']]
 y = df['Income Lost (%)']
 
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-# Using Random Forest (very good for non-linear regression tasks)
 model = RandomForestRegressor(n_estimators=100, random_state=42)
 model.fit(X_train, y_train)
 
-# 3. Sidebar UI for the live demo
+#  Sidebar UI for the live demo
 st.sidebar.header("📡 Live Disruption Feed")
 st.sidebar.markdown("Simulate API inputs from OpenWeatherMap & the Delivery Platform Server:")
 in_severity = st.sidebar.slider("Weather Severity (%)", 0.0, 100.0, 82.5)
 in_demand = st.sidebar.slider("Platform Demand Left (%)", 0.0, 100.0, 12.0)
 
-# 4. Predict
-# Formatting input exactly as expected by strictly trained feature names
+#  Prediction
 input_df = pd.DataFrame([[in_severity, in_demand]], columns=X.columns)
 predicted_loss = model.predict(input_df)[0]
 
-# 5. Output UI
+# Output UI
 col1, col2 = st.columns(2)
 
 with col1:
@@ -65,7 +61,6 @@ with col1:
     with st.expander("View Raw Training Dataset (Top 5)"):
         st.dataframe(df.head(5), use_container_width=True)
     
-    # Feature importance visually demonstrates to judges "what matters"
     fig, ax = plt.subplots(figsize=(6, 3))
     colors = ['#EF4444', '#3B82F6']
     ax.barh(X.columns, model.feature_importances_, color=colors)
@@ -89,7 +84,7 @@ with col2:
     with metric_cols[1]:
         st.metric(label="Calculated Auto-Payout", value=f"₹{payout}", delta=f"{predicted_loss:.1f}% Wage Protected", delta_color="normal")
     
-    st.success("🟢 Payout Approved by Model. Smart Contract Triggered.")
+    st.success(" Payout Approved by Model. Smart Contract Triggered.")
     
 st.markdown("---")
 st.markdown("*(This Streamlit dashboard runs in parallel to the React app serving as the backend AI processing visualization layer for Hackathon Judges)*")
