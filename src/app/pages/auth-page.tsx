@@ -5,8 +5,9 @@ import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
-import { Shield, Sparkles } from "lucide-react";
+import { Shield, Sparkles, Loader2 } from "lucide-react";
 import { mockApi } from "../../services/mockApi";
+import { loadPremiumModel, isPremiumModelReady } from "../../services/mlEngine";
 
 export function AuthPage() {
   const navigate = useNavigate();
@@ -21,16 +22,30 @@ export function AuthPage() {
     persona: "hustler",
   });
   const [calculatedPremium, setCalculatedPremium] = useState<number | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [modelSource, setModelSource] = useState<"ml" | "actuarial" | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: { preventDefault: () => void }) => {
     e.preventDefault();
-    const premium = mockApi.calculatePremium({
+    setLoading(true);
+
+    // Try to load pretrained model if not already loaded
+    if (!isPremiumModelReady()) {
+      await loadPremiumModel();
+    }
+
+    const wasModelReady = isPremiumModelReady();
+
+    const premium = await mockApi.calculatePremium({
       dailyIncome: formData.dailyIncome,
       vehicle: formData.vehicle,
       zone: formData.location,
       persona: formData.persona,
     });
+
+    setModelSource(wasModelReady ? "ml" : "actuarial");
     setCalculatedPremium(premium);
+    setLoading(false);
   };
 
   const confirmAndProceed = () => {
@@ -89,7 +104,9 @@ export function AuthPage() {
                       <SelectValue placeholder="Select vehicle" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="bike">Motorbike</SelectItem>
+                      <SelectItem value="motorcycle">Motorbike</SelectItem>
+                      <SelectItem value="scooter">Scooter</SelectItem>
+                      <SelectItem value="electric_scooter">Electric Scooter</SelectItem>
                       <SelectItem value="cycle">Bicycle</SelectItem>
                     </SelectContent>
                   </Select>
@@ -100,7 +117,6 @@ export function AuthPage() {
                   <Select
                     value={formData.platform}
                     onValueChange={(value) => setFormData({ ...formData, platform: value })}
-                    required
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Select your platform" />
@@ -142,8 +158,22 @@ export function AuthPage() {
                   </Select>
                 </div>
 
-                <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700">
-                  <Sparkles className="w-4 h-4 mr-2" /> Calculate Dynamic Premium
+                <Button
+                  type="submit"
+                  className="w-full bg-blue-600 hover:bg-blue-700"
+                  disabled={loading}
+                >
+                  {loading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Running AI Model...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-4 h-4 mr-2" />
+                      Calculate Dynamic Premium
+                    </>
+                  )}
                 </Button>
               </form>
             </CardContent>
@@ -153,22 +183,35 @@ export function AuthPage() {
             <CardHeader>
               <CardTitle className="text-center text-green-800">Your Dynamic AI Premium</CardTitle>
               <CardDescription className="text-center text-green-600">
-                Calculated based on your income, zone, vehicle, and persona.
+                {modelSource === "ml"
+                  ? "Predicted by neural network trained on 45,593 real delivery records"
+                  : "Calculated using actuarial risk model"}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
+              {modelSource && (
+                <div className={`text-xs text-center px-3 py-1 rounded-full font-medium ${
+                  modelSource === "ml"
+                    ? "bg-blue-100 text-blue-700"
+                    : "bg-amber-100 text-amber-700"
+                }`}>
+                  {modelSource === "ml" ? "ML Model (Real Data)" : "Actuarial Fallback"}
+                </div>
+              )}
+
               <div className="bg-white p-6 rounded-lg text-center shadow-sm border border-green-100">
-                <span className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Weekly Premium</span>
+                <span className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Daily Premium</span>
                 <div className="text-5xl font-extrabold text-green-600 mt-2">
                   ₹{calculatedPremium}
                 </div>
+                <p className="text-sm text-gray-500 mt-1">≈ ₹{Math.round(calculatedPremium! * 22)}/month</p>
                 <p className="text-sm text-gray-600 mt-3">
-                  Covers up to ₹{calculatedPremium * 8} per claim for weather & demand disruptions.
+                  Covers up to ₹{calculatedPremium! * 8} per claim for weather &amp; demand disruptions.
                 </p>
               </div>
 
               <Button onClick={confirmAndProceed} className="w-full bg-green-600 hover:bg-green-700 h-12 text-lg font-medium">
-                Subscribe & Go to Dashboard
+                Subscribe &amp; Go to Dashboard
               </Button>
               <Button onClick={() => setCalculatedPremium(null)} variant="outline" className="w-full border-green-200 text-green-700 hover:bg-green-100 bg-white">
                 Recalculate

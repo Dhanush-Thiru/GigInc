@@ -1,45 +1,36 @@
-{
- "nbformat": 4,
- "nbformat_minor": 5,
- "metadata": {
-  "colab": {
-   "provenance": []
-  },
-  "kernelspec": {
-   "display_name": "Python 3",
-   "language": "python",
-   "name": "python3"
-  },
-  "language_info": {
-   "name": "python",
-   "version": "3.10.0"
-  }
- },
- "cells": [
-  {
-   "cell_type": "markdown",
-   "id": "m0",
-   "metadata": {},
-   "source": "# InsureGig \u2014 Premium Model Training\nOne notebook. Run each cell top to bottom.\n\n**Cell 1** \u2014 Install deps  \n**Cell 2** \u2014 Upload `kaggle.json` (30 sec)  \n**Cell 3** \u2014 Download datasets from Kaggle automatically  \n**Cell 4** \u2014 Encoding maps  \n**Cell 5** \u2014 Clean data  \n**Cell 6** \u2014 Feature engineering  \n**Cell 7** \u2014 Build feature matrix  \n**Cell 8** \u2014 Train model (~2 min)  \n**Cell 9** \u2014 Evaluate  \n**Cell 10** \u2014 Export TF.js model  \n**Cell 11** \u2014 Download zip"
-  },
-  {
-   "cell_type": "code",
-   "execution_count": null,
-   "id": "c1",
-   "metadata": {},
-   "outputs": [],
-   "source": [
+import json
+
+def code_cell(id, lines):
+    return {"cell_type": "code", "execution_count": None, "id": id,
+            "metadata": {}, "outputs": [], "source": lines}
+
+def md_cell(id, text):
+    return {"cell_type": "markdown", "id": id, "metadata": {}, "source": text}
+
+cells = [
+
+md_cell("m0", (
+    "# InsureGig — Premium Model Training\n"
+    "One notebook. Run each cell top to bottom.\n\n"
+    "**Cell 1** — Install deps  \n"
+    "**Cell 2** — Upload `kaggle.json` (30 sec)  \n"
+    "**Cell 3** — Download datasets from Kaggle automatically  \n"
+    "**Cell 4** — Encoding maps  \n"
+    "**Cell 5** — Clean data  \n"
+    "**Cell 6** — Feature engineering  \n"
+    "**Cell 7** — Build feature matrix  \n"
+    "**Cell 8** — Train model (~2 min)  \n"
+    "**Cell 9** — Evaluate  \n"
+    "**Cell 10** — Export TF.js model  \n"
+    "**Cell 11** — Download zip"
+)),
+
+code_cell("c1", [
     "!pip install tensorflowjs kaggle scikit-learn -q\n",
     "print('Done')"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": null,
-   "id": "c2",
-   "metadata": {},
-   "outputs": [],
-   "source": [
+]),
+
+code_cell("c2", [
     "# Go to kaggle.com -> Settings -> API -> Create New Token -> upload kaggle.json here\n",
     "from google.colab import files\n",
     "import os, json\n",
@@ -48,15 +39,9 @@
     "os.rename('kaggle.json', '/root/.config/kaggle/kaggle.json')\n",
     "os.chmod('/root/.config/kaggle/kaggle.json', 0o600)\n",
     "print('Kaggle credentials set')"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": null,
-   "id": "c3",
-   "metadata": {},
-   "outputs": [],
-   "source": [
+]),
+
+code_cell("c3", [
     "import os, shutil\n",
     "\n",
     "# Download all 3 datasets\n",
@@ -69,10 +54,10 @@
     "    print(d, os.listdir(d))\n",
     "\n",
     "# Copy to working directory with the exact names our code expects\n",
-    "# Dataset 1 (Gaurav Malik) \u2014 has train.csv\n",
+    "# Dataset 1 (Gaurav Malik) — has train.csv\n",
     "shutil.copy('/content/ds1/train.csv', 'train.csv')\n",
     "\n",
-    "# Dataset 2 (Swiggy/Zomato rider info) \u2014 find the right file\n",
+    "# Dataset 2 (Swiggy/Zomato rider info) — find the right file\n",
     "ds2_files = os.listdir('/content/ds2')\n",
     "rider_file = [f for f in ds2_files if 'rider' in f.lower() or 'info' in f.lower()]\n",
     "if rider_file:\n",
@@ -87,15 +72,9 @@
     "\n",
     "print('\\nReady:', os.listdir('.'))\n",
     "print('train.csv rows:', sum(1 for _ in open('train.csv')))"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": null,
-   "id": "c4",
-   "metadata": {},
-   "outputs": [],
-   "source": [
+]),
+
+code_cell("c4", [
     "import pandas as pd, numpy as np, json, os\n",
     "from math import radians, sin, cos, sqrt, atan2\n",
     "import tensorflow as tf\n",
@@ -116,15 +95,9 @@
     "TRAFFIC_MULT = {'Jam': 1.50, 'High': 1.30, 'Medium': 1.10, 'Low': 1.00}\n",
     "VEHICLE_MULT = {'bicycle': 1.25, 'scooter': 1.10, 'motorcycle': 1.00, 'electric_scooter': 0.95}\n",
     "print(f'TF {tf.__version__} | Maps defined')"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": null,
-   "id": "c5",
-   "metadata": {},
-   "outputs": [],
-   "source": [
+]),
+
+code_cell("c5", [
     "def haversine_km(lat1,lon1,lat2,lon2):\n",
     "    R=6371; p1,p2=radians(lat1),radians(lat2)\n",
     "    dp,dl=radians(lat2-lat1),radians(lon2-lon1)\n",
@@ -157,15 +130,9 @@
     "df['time_of_day']=df['Time_Orderd'].apply(time_bucket)\n",
     "df['is_night_shift']=(df['time_of_day']=='Night').astype(int)\n",
     "print(f'{len(df):,} clean records')"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": null,
-   "id": "c6",
-   "metadata": {},
-   "outputs": [],
-   "source": [
+]),
+
+code_cell("c6", [
     "fdt=pd.read_csv('Food_Delivery_Times.csv').dropna(subset=['Courier_Experience_yrs'])\n",
     "exp_mean,exp_std=fdt['Courier_Experience_yrs'].mean(),fdt['Courier_Experience_yrs'].std()\n",
     "np.random.seed(42)\n",
@@ -186,15 +153,9 @@
     "    return round(p,2)\n",
     "df['premium_inr']=df.apply(compute_premium,axis=1)\n",
     "print(f\"Premium | Min:{df['premium_inr'].min():.0f}  Max:{df['premium_inr'].max():.0f}  Mean:{df['premium_inr'].mean():.0f}\")"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": null,
-   "id": "c7",
-   "metadata": {},
-   "outputs": [],
-   "source": [
+]),
+
+code_cell("c7", [
     "def build_features(row):\n",
     "    return [\n",
     "        (row['Delivery_person_Age']-15)/45.0,\n",
@@ -216,15 +177,9 @@
     "y=df['premium_inr'].values.astype(np.float32)\n",
     "X_train,X_test,y_train,y_test=train_test_split(X,y,test_size=0.2,random_state=42)\n",
     "print(f'Features {X.shape} | Train {len(X_train):,} | Test {len(X_test):,}')"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": null,
-   "id": "c8",
-   "metadata": {},
-   "outputs": [],
-   "source": [
+]),
+
+code_cell("c8", [
     "tf.random.set_seed(42)\n",
     "model=tf.keras.Sequential([\n",
     "    tf.keras.layers.Input(shape=(14,)),\n",
@@ -242,15 +197,9 @@
     "        tf.keras.callbacks.ReduceLROnPlateau(monitor='val_loss',factor=0.5,patience=5,verbose=1)\n",
     "    ],verbose=1)\n",
     "print('Training complete')"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": null,
-   "id": "c9",
-   "metadata": {},
-   "outputs": [],
-   "source": [
+]),
+
+code_cell("c9", [
     "preds=model.predict(X_test).flatten()\n",
     "rmse=float(np.sqrt(mean_squared_error(y_test,preds)))\n",
     "mae=float(mean_absolute_error(y_test,preds))\n",
@@ -265,15 +214,9 @@
     "axes[1].set_xlabel('Actual'); axes[1].set_ylabel('Predicted')\n",
     "axes[1].set_title('Predicted vs Actual Premium')\n",
     "plt.tight_layout(); plt.show()"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": null,
-   "id": "c10",
-   "metadata": {},
-   "outputs": [],
-   "source": [
+]),
+
+code_cell("c10", [
     "import tensorflowjs as tfjs\n",
     "os.makedirs('premium_model',exist_ok=True)\n",
     "tfjs.converters.save_keras_model(model,'premium_model')\n",
@@ -296,15 +239,9 @@
     "print('Exported:')\n",
     "for fname in os.listdir('premium_model'):\n",
     "    print(f'  {fname}  ({os.path.getsize(\"premium_model/\"+fname)/1024:.1f} KB)')"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": null,
-   "id": "c11",
-   "metadata": {},
-   "outputs": [],
-   "source": [
+]),
+
+code_cell("c11", [
     "import shutil\n",
     "from google.colab import files\n",
     "shutil.make_archive('premium_model','zip','.','premium_model')\n",
@@ -313,7 +250,22 @@
     "print('Extract the zip and place the premium_model folder at:')\n",
     "print('  D:/GigInc/public/premium_model/')\n",
     "print('Required: model.json | group1-shard1of1.bin | model_config.json')"
-   ]
-  }
- ]
+]),
+
+]
+
+nb = {
+    "nbformat": 4,
+    "nbformat_minor": 5,
+    "metadata": {
+        "colab": {"provenance": []},
+        "kernelspec": {"display_name": "Python 3", "language": "python", "name": "python3"},
+        "language_info": {"name": "python", "version": "3.10.0"}
+    },
+    "cells": cells
 }
+
+with open('D:/GigInc/InsureGig_Colab.ipynb', 'w') as f:
+    json.dump(nb, f, indent=1)
+
+print('Notebook written successfully')
