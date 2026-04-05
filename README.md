@@ -264,7 +264,7 @@ Unlike traditional insurance, **no claim filing is required**. Payouts are trigg
 
 ## 🗓️ Development Plan
 
-### Phase 1 — Foundation ✅ Complete
+### Phase 1 and 2 — Foundation ✅ Complete
 - [x] Landing page with animated hero, feature highlights, and mobile-responsive navigation
 - [x] Auth/signup flow with persona selection (Hustler, Night Owl, Fair-Weather Rider)
 - [x] Dynamic weekly premium calculation using TensorFlow.js ML model (trained on 3,000+ Indian delivery records)
@@ -283,14 +283,12 @@ Unlike traditional insurance, **no claim filing is required**. Payouts are trigg
 - [x] Google Colab notebook for ML model training and Streamlit visualizer
 - [x] Deployed to Vercel: [https://gig-inc-three.vercel.app](https://gig-inc-three.vercel.app)
 
-### Phase 2 — Core Backend Integration
+### Phase 3 — Core Backend Integration 
 - [ ] Connect production PostgreSQL database for persistent user and claims data
 - [ ] Aadhaar eKYC via DigiLocker API
 - [ ] Implement secure UPI auto-debit for recurring weekly premiums
 - [ ] Real platform status API polling (Swiggy, Zomato, Amazon) for outage triggers
 - [ ] Production Twilio SMS gateway with delivery receipts
-
-### Phase 3 — Scale & Compliance
 - [ ] IRDAI Regulatory Sandbox application
 - [ ] Partner with a licensed insurer as risk carrier
 - [ ] Native Android app for offline-capable access
