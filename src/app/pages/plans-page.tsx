@@ -84,8 +84,8 @@ export function PlansPage() {
 
         if (!isMounted) return;
 
-        const normalPremium = clampPremium(basePremium, MIN_WEEKLY_PREMIUM, 42);
-        const premiumPremium = clampPremium(Math.max(basePremium + 10, normalPremium + 8));
+        const normalPremium = 28; // fixed affordable base tier
+        const premiumPremium = clampPremium(basePremium, 33, MAX_WEEKLY_PREMIUM);
 
         setNormalPlanPremium(normalPremium);
         setPremiumPlanPremium(premiumPremium);
@@ -519,7 +519,7 @@ export function PlansPage() {
                     <p className="font-semibold text-gray-900">Your weekly premium</p>
                     <p className="text-xs text-gray-400">Clamped to ₹20–₹50 affordability range</p>
                   </div>
-                  <span className="text-2xl font-bold text-brand-600">₹{normalPlanPremium}</span>
+                  <span className="text-2xl font-bold text-brand-600">₹{premiumPlanPremium}</span>
                 </div>
               </div>
             </CardContent>
