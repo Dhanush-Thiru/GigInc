@@ -160,7 +160,7 @@ function recalculatePortfolioHealth() {
   const premium = Math.max(1, portfolioMetrics.totalPremiumCollected);
   portfolioMetrics.bcr = portfolioMetrics.totalClaimsPaid / premium;
   portfolioMetrics.lossRatio = portfolioMetrics.totalClaimsPaid / premium;
-  portfolioMetrics.newEnrollmentsSuspended = false;
+  portfolioMetrics.newEnrollmentsSuspended = portfolioMetrics.lossRatio > 0.85;
 }
 
 function thresholdByPeril(disruptionType: string): number {

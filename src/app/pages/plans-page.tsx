@@ -3,7 +3,8 @@ import { useNavigate } from "react-router";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
-import { Check, Star, Shield, Sparkles, Zap } from "lucide-react";
+import { Check, Star, Shield, Sparkles, Zap, Info } from "lucide-react";
+import type { PremiumInputs } from "../../services/mlEngine";
 import { toast } from "sonner";
 import { motion } from "motion/react";
 import { PayNowButton } from "../components/ui/PayNowButton";
@@ -28,6 +29,7 @@ export function PlansPage() {
   const [normalPlanPremium, setNormalPlanPremium] = useState(25);
   const [premiumPlanPremium, setPremiumPlanPremium] = useState(35);
   const [isCalculatingPremium, setIsCalculatingPremium] = useState(true);
+  const [actuarialInputs, setActuarialInputs] = useState<PremiumInputs | null>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -62,12 +64,14 @@ export function PlansPage() {
             await loadPremiumModel();
           }
 
-          basePremium = await mockApi.calculatePremium({
+          const breakdown = mockApi.calculatePremiumBreakdown({
             dailyIncome: Number(user?.dailyIncome) || 500,
             vehicle: user?.vehicle || "motorcycle",
             zone: user?.location || "Urban",
             persona: user?.persona || "hustler",
           });
+          basePremium = breakdown.premium;
+          if (isMounted) setActuarialInputs(breakdown.inputs);
 
           localStorage.setItem(
             "user",
@@ -438,6 +442,90 @@ export function PlansPage() {
           </Card>
         </motion.div>
       </div>
+
+      {/* Actuarial Breakdown */}
+      {actuarialInputs && !isCalculatingPremium && (
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.5 }}
+        >
+          <Card className="border-brand-100 bg-gradient-to-br from-slate-50 to-white">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-base font-semibold text-gray-800">
+                <Info className="w-4 h-4 text-brand-500" />
+                How your premium is calculated
+              </CardTitle>
+              <CardDescription>Full actuarial breakdown — no hidden assumptions</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2 text-sm">
+                {/* Row helper */}
+                {[
+                  {
+                    label: "Trigger probability",
+                    value: `${(actuarialInputs.triggerProbability * 100).toFixed(1)}%`,
+                    note: `City base × peril type × activity tier`,
+                  },
+                  {
+                    label: "Avg income at risk / day",
+                    value: `₹${Math.round(actuarialInputs.avgIncomeLostPerDay)}`,
+                    note: `Daily income × loss fraction × activity factor`,
+                  },
+                  {
+                    label: "Days exposed",
+                    value: `${actuarialInputs.daysExposed} days`,
+                    note: `Typical disruption duration for your peril type`,
+                  },
+                  {
+                    label: "Base premium",
+                    value: `₹${actuarialInputs.basePremium.toFixed(2)}`,
+                    note: `trigger% × income at risk × days exposed`,
+                    highlight: true,
+                  },
+                  {
+                    label: "City adjustment",
+                    value: `×${actuarialInputs.cityFactor.toFixed(2)}`,
+                    note: `Metropolitan 1.12×  ·  Urban 1.00×  ·  Semi-Urban 0.90×`,
+                  },
+                  {
+                    label: "Peril adjustment",
+                    value: `×${actuarialInputs.perilFactor.toFixed(2)}`,
+                    note: `Weather 1.15×  ·  AQI 1.08×  ·  Traffic 1.03×  ·  Platform 1.00×`,
+                  },
+                  {
+                    label: "Activity tier adjustment",
+                    value: `×${actuarialInputs.activityFactor.toFixed(2)}`,
+                    note: `High (Hustler) 1.14×  ·  Medium 1.00×  ·  Low 0.90×`,
+                  },
+                ].map((row) => (
+                  <div
+                    key={row.label}
+                    className={`flex items-start justify-between gap-4 py-2 px-3 rounded-lg ${row.highlight ? "bg-brand-50 border border-brand-100" : "hover:bg-gray-50"}`}
+                  >
+                    <div className="flex-1 min-w-0">
+                      <p className={`font-medium ${row.highlight ? "text-brand-800" : "text-gray-700"}`}>{row.label}</p>
+                      <p className="text-xs text-gray-400 mt-0.5 truncate">{row.note}</p>
+                    </div>
+                    <span className={`font-semibold shrink-0 tabular-nums ${row.highlight ? "text-brand-700" : "text-gray-800"}`}>
+                      {row.value}
+                    </span>
+                  </div>
+                ))}
+
+                {/* Divider + final */}
+                <div className="border-t border-dashed border-gray-200 mt-3 pt-3 flex items-center justify-between px-3">
+                  <div>
+                    <p className="font-semibold text-gray-900">Your weekly premium</p>
+                    <p className="text-xs text-gray-400">Clamped to ₹20–₹50 affordability range</p>
+                  </div>
+                  <span className="text-2xl font-bold text-brand-600">₹{normalPlanPremium}</span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      )}
 
       {/* Plan Comparison */}
       <motion.div
