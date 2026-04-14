@@ -18,7 +18,11 @@ export function HistoryPageLive() {
   const [historyData, setHistoryData] = useState<StoredDisruptionRecord[]>([]);
 
   useEffect(() => {
-    setHistoryData(getStoredDisruptionHistory());
+    async function load() {
+      const d = await getStoredDisruptionHistory();
+      setHistoryData(d);
+    }
+    load();
   }, []);
 
   const orderedHistory = useMemo(() => [...historyData].reverse(), [historyData]);

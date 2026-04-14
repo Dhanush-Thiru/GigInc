@@ -1,4 +1,4 @@
-﻿import { useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
 import { LogIn, UserPlus } from "lucide-react";
 import logoGig from "../../../assets/LogoGig.jpeg";
+import { supabase } from "../../services/supabaseClient";
 
 export function AuthPage() {
   const navigate = useNavigate();
@@ -20,7 +21,28 @@ export function AuthPage() {
     dailyIncome: 500,
     persona: "hustler",
   });
-  const continueToPlans = () => {
+  const continueToPlans = async () => {
+    const userData = {
+      ...formData,
+      premium_status: "pending",
+      daily_income: formData.dailyIncome // match DB schema
+    };
+    
+    if (supabase) {
+      const { error } = await supabase.from('users').upsert({
+        name: userData.name,
+        email: userData.email,
+        phone: userData.phone,
+        platform: userData.platform,
+        location: userData.location,
+        vehicle: userData.vehicle,
+        daily_income: userData.dailyIncome,
+        premium_status: "pending",
+        plan_type: "none"
+      }, { onConflict: 'email' });
+      if (error) console.error("Supabase user insert error:", error);
+    }
+    
     localStorage.setItem("user", JSON.stringify({
       ...formData,
       premiumStatus: "pending",

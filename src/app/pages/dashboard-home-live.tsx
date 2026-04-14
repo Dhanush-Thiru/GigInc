@@ -54,9 +54,15 @@ export function DashboardHomeLive() {
   const [disruptionHistory, setDisruptionHistory] = useState<StoredDisruptionRecord[]>([]);
 
   useEffect(() => {
-    setUser(getStoredUserProfile());
-    setClaimHistory(getStoredClaimHistory());
-    setDisruptionHistory(getStoredDisruptionHistory());
+    async function load() {
+      const u = await getStoredUserProfile();
+      const c = await getStoredClaimHistory();
+      const d = await getStoredDisruptionHistory();
+      setUser(u);
+      setClaimHistory(c);
+      setDisruptionHistory(d);
+    }
+    load();
   }, []);
 
   const weeklyChartData = useMemo(() => {
