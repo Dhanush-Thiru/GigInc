@@ -1,19 +1,34 @@
 import { useNavigate } from "react-router";
 import { Button } from "../components/ui/button";
-import { Zap, TrendingUp, Clock, CloudRain, Wind, DollarSign, Award, Menu, X, Users } from "lucide-react";
+import {
+  Zap,
+  TrendingUp,
+  Clock,
+  CloudRain,
+  Wind,
+  DollarSign,
+  Award,
+  Menu,
+  X,
+  Users,
+} from "lucide-react";
 import logoGig from "../../../assets/LogoGig.jpeg";
 import { motion, AnimatePresence } from "motion/react";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
+import LanguageSwitcher from "../components/ui/LanguageSwitcher";
 
 export function LandingPage() {
   const navigate = useNavigate();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+  const { t } = useTranslation(["landing", "common"]);
+
   const heroImages = [
     "/images/hero1.jpg",
     "/images/hero2.jpg",
-    "/images/hero3.jpg"
+    "/images/hero3.jpg",
   ];
 
   useEffect(() => {
@@ -35,7 +50,7 @@ export function LandingPage() {
         transition={{
           duration: 8,
           repeat: Infinity,
-          ease: "easeInOut"
+          ease: "easeInOut",
         }}
       />
       <motion.div
@@ -47,7 +62,7 @@ export function LandingPage() {
         transition={{
           duration: 10,
           repeat: Infinity,
-          ease: "easeInOut"
+          ease: "easeInOut",
         }}
       />
 
@@ -64,15 +79,38 @@ export function LandingPage() {
             whileHover={{ scale: 1.05 }}
             transition={{ type: "spring", stiffness: 400 }}
           >
-            <img src={logoGig} alt="InsureGig" className="h-24 md:h-28 w-auto object-contain" />
+            <img
+              src={logoGig}
+              alt="InsureGig"
+              className="h-24 md:h-28 w-auto object-contain"
+            />
           </motion.div>
 
           {/* Desktop Nav */}
           <div className="hidden md:flex items-center gap-6">
-            <a href="#features" className="text-gray-600 hover:text-brand-500 transition-colors">Features</a>
-            <a href="#how-it-works" className="text-gray-600 hover:text-brand-500 transition-colors">How it Works</a>
-            <a href="#pricing" className="text-gray-600 hover:text-brand-500 transition-colors">Pricing</a>
-            <Button variant="outline" onClick={() => navigate("/auth")}>Login</Button>
+            <LanguageSwitcher />
+            <a
+              href="#features"
+              className="text-gray-600 hover:text-brand-500 transition-colors"
+            >
+              {t("features")}
+            </a>
+            <a
+              href="#how-it-works"
+              className="text-gray-600 hover:text-brand-500 transition-colors"
+            >
+              {t("howItWorks")}
+            </a>
+            <a
+              href="#pricing"
+              className="text-gray-600 hover:text-brand-500 transition-colors"
+            >
+              {t("pricing")}
+            </a>
+
+            <Button variant="outline" onClick={() => navigate("/auth")}>
+              {t("login")}
+            </Button>
           </div>
 
           {/* Mobile Hamburger */}
@@ -81,7 +119,11 @@ export function LandingPage() {
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             aria-label="Toggle menu"
           >
-            {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            {mobileMenuOpen ? (
+              <X className="w-6 h-6" />
+            ) : (
+              <Menu className="w-6 h-6" />
+            )}
           </button>
         </nav>
 
@@ -101,25 +143,31 @@ export function LandingPage() {
                   onClick={() => setMobileMenuOpen(false)}
                   className="px-4 py-3 rounded-lg text-gray-700 hover:bg-brand-50 hover:text-brand-500 transition-colors font-medium"
                 >
-                  Features
+                  {t("features")}
                 </a>
                 <a
                   href="#how-it-works"
                   onClick={() => setMobileMenuOpen(false)}
                   className="px-4 py-3 rounded-lg text-gray-700 hover:bg-brand-50 hover:text-brand-500 transition-colors font-medium"
                 >
-                  How it Works
+                  {t("howItWorks")}
                 </a>
                 <a
                   href="#pricing"
                   onClick={() => setMobileMenuOpen(false)}
                   className="px-4 py-3 rounded-lg text-gray-700 hover:bg-brand-50 hover:text-brand-500 transition-colors font-medium"
                 >
-                  Pricing
+                  {t("pricing")}
                 </a>
                 <div className="px-4 pt-2">
-                  <Button className="w-full bg-brand-500 hover:bg-brand-600" onClick={() => { setMobileMenuOpen(false); navigate("/auth"); }}>
-                    Login
+                  <Button
+                    className="w-full bg-brand-500 hover:bg-brand-600"
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      navigate("/auth");
+                    }}
+                  >
+                    {t("login")}
                   </Button>
                 </div>
               </div>
@@ -131,118 +179,53 @@ export function LandingPage() {
       {/* Hero Section */}
       <section className="relative max-w-7xl mx-auto px-6 py-20">
         <div className="grid md:grid-cols-2 gap-12 items-center">
-          <motion.div
-            initial={{ x: -100, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
+          <motion.h1
+            className="text-5xl font-bold text-brand-900 mb-6"
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.6, delay: 0.4 }}
           >
-            <motion.h1
-              className="text-5xl font-bold text-brand-900 mb-6"
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ duration: 0.6, delay: 0.4 }}
-            >
-              AI Insurance for Delivery Partners
-            </motion.h1>
-            <motion.p
-              className="text-xl text-gray-700 mb-4"
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ duration: 0.6, delay: 0.6 }}
-            >
-              Protecting every delivery, every week.
-            </motion.p>
-            <motion.p
-              className="text-lg text-gray-600 mb-8"
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ duration: 0.6, delay: 0.8 }}
-            >
-              Protect your weekly income instantly with AI-powered insurance designed for delivery workers from Swiggy, Zomato, and more.
-            </motion.p>
-            <motion.div
-              className="flex gap-4"
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ duration: 0.6, delay: 1 }}
-            >
-              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                <Button size="lg" onClick={() => navigate("/auth")} className="bg-brand-500 hover:bg-brand-600">
-                  Get Started
-                </Button>
-              </motion.div>
-              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                <Button size="lg" variant="outline">
-                  Watch Demo
-                </Button>
-              </motion.div>
+            {t("heroTitle")}
+          </motion.h1>
+
+          <motion.p
+            className="text-xl text-gray-700 mb-4"
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.6, delay: 0.6 }}
+          >
+            {t("heroSubtitle")}
+          </motion.p>
+
+          <motion.p
+            className="text-lg text-gray-600 mb-8"
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.6, delay: 0.8 }}
+          >
+            {t("heroDescription")}
+          </motion.p>
+
+          <motion.div
+            className="flex gap-4"
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.6, delay: 1 }}
+          >
+            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+              <Button
+                size="lg"
+                onClick={() => navigate("/auth")}
+                className="bg-brand-500 hover:bg-brand-600"
+              >
+                {t("getStarted")}
+              </Button>
             </motion.div>
-          </motion.div>
 
-          <motion.div
-            className="relative"
-            initial={{ x: 100, opacity: 0, rotateY: -30 }}
-            animate={{ x: 0, opacity: 1, rotateY: 0 }}
-            transition={{ duration: 1, delay: 0.3 }}
-            style={{ perspective: 1000 }}
-          >
-            <motion.div
-              className="rounded-2xl overflow-hidden shadow-2xl relative"
-              whileHover={{
-                rotateY: 5,
-                rotateX: -5,
-                scale: 1.02,
-              }}
-              transition={{ type: "spring", stiffness: 300, damping: 20 }}
-              style={{ transformStyle: "preserve-3d" }}
-            >
-              {heroImages.map((img, index) => (
-                <motion.img
-                  key={img}
-                  src={img}
-                  alt={`Delivery worker ${index + 1}`}
-                  className="w-full h-auto absolute inset-0"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: currentImageIndex === index ? 1 : 0 }}
-                  transition={{ duration: 1 }}
-                  style={{
-                    position: index === 0 ? "relative" : "absolute",
-                  }}
-                />
-              ))}
-
-              {/* Floating Stats */}
-              <motion.div
-                className="absolute top-6 right-6 bg-white/90 backdrop-blur-sm rounded-lg p-4 shadow-lg"
-                initial={{ scale: 0, rotate: -180 }}
-                animate={{ scale: 1, rotate: 0 }}
-                transition={{ delay: 1.5, type: "spring" }}
-                whileHover={{ scale: 1.1, rotate: 5 }}
-              >
-                <div className="flex items-center gap-2">
-                  <Users className="w-5 h-5 text-brand-500" />
-                  <div>
-                    <div className="text-2xl font-bold text-brand-900">10K+</div>
-                    <div className="text-xs text-gray-600">Active Users</div>
-                  </div>
-                </div>
-              </motion.div>
-
-              <motion.div
-                className="absolute bottom-6 left-6 bg-green-600/90 backdrop-blur-sm rounded-lg p-4 shadow-lg"
-                initial={{ scale: 0, rotate: 180 }}
-                animate={{ scale: 1, rotate: 0 }}
-                transition={{ delay: 1.7, type: "spring" }}
-                whileHover={{ scale: 1.1, rotate: -5 }}
-              >
-                <div className="flex items-center gap-2">
-                  <DollarSign className="w-5 h-5 text-white" />
-                  <div>
-                    <div className="text-2xl font-bold text-white">₹2.5Cr</div>
-                    <div className="text-xs text-green-100">Payouts Processed</div>
-                  </div>
-                </div>
-              </motion.div>
+            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+              <Button size="lg" variant="outline">
+                {t("watchDemo")}
+              </Button>
             </motion.div>
           </motion.div>
         </div>
@@ -258,15 +241,31 @@ export function LandingPage() {
             transition={{
               duration: 30,
               repeat: Infinity,
-              ease: "linear"
+              ease: "linear",
             }}
           >
             {[...Array(3)].map((_, i) => (
               <div key={i} className="flex gap-4 shrink-0">
-                <img src="/images/delivery-rain.png" alt="" className="h-full w-auto object-cover" />
-                <img src="/images/weather-rain.jpg" alt="" className="h-full w-auto object-cover" />
-                <img src="/images/pollution-city.jpg" alt="" className="h-full w-auto object-cover" />
-                <img src="/images/income-payment.jpg" alt="" className="h-full w-auto object-cover" />
+                <img
+                  src="/images/delivery-rain.png"
+                  alt=""
+                  className="h-full w-auto object-cover"
+                />
+                <img
+                  src="/images/weather-rain.jpg"
+                  alt=""
+                  className="h-full w-auto object-cover"
+                />
+                <img
+                  src="/images/pollution-city.jpg"
+                  alt=""
+                  className="h-full w-auto object-cover"
+                />
+                <img
+                  src="/images/income-payment.jpg"
+                  alt=""
+                  className="h-full w-auto object-cover"
+                />
               </div>
             ))}
           </motion.div>
@@ -280,10 +279,12 @@ export function LandingPage() {
             transition={{ duration: 0.6 }}
             viewport={{ once: true }}
           >
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">The Problem</h2>
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">
+              {t("problemTitle")}
+            </h2>
+
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Delivery workers lose income during heavy rain, pollution, and other disruptions.
-              Traditional insurance is slow and complicated. We make it instant and automatic.
+              {t("problemDescription")}
             </p>
           </motion.div>
 
@@ -292,22 +293,22 @@ export function LandingPage() {
             {[
               {
                 icon: CloudRain,
-                title: "Weather Impact",
-                desc: "Heavy rain reduces deliveries by 60%",
-                image: "/images/weather-rain.jpg"
+                title: t("weatherImpactTitle"),
+                desc: t("weatherImpactDesc"),
+                image: "/images/weather-rain.jpg",
               },
               {
                 icon: Wind,
-                title: "Pollution Risk",
-                desc: "High AQI means fewer riders on road",
-                image: "/images/pollution-city.jpg"
+                title: t("pollutionRiskTitle"),
+                desc: t("pollutionRiskDesc"),
+                image: "/images/pollution-city.jpg",
               },
               {
                 icon: TrendingUp,
-                title: "Income Loss",
-                desc: "Lost earnings impact families",
-                image: "/images/income-payment.jpg"
-              }
+                title: t("incomeLossTitle"),
+                desc: t("incomeLossDesc"),
+                image: "/images/income-payment.jpg",
+              },
             ].map((item, index) => (
               <motion.div
                 key={item.title}
@@ -324,7 +325,11 @@ export function LandingPage() {
                 style={{ transformStyle: "preserve-3d" }}
               >
                 <div className="relative rounded-xl overflow-hidden shadow-lg h-64">
-                  <img src={item.image} alt={item.title} className="w-full h-full object-cover" />
+                  <img
+                    src={item.image}
+                    alt={item.title}
+                    className="w-full h-full object-cover"
+                  />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
                   <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
                     <item.icon className="w-10 h-10 mb-3" />
@@ -339,7 +344,10 @@ export function LandingPage() {
       </section>
 
       {/* How It Works */}
-      <section id="how-it-works" className="py-16 bg-gradient-to-br from-brand-50 to-brand-100 relative overflow-hidden">
+      <section
+        id="how-it-works"
+        className="py-16 bg-gradient-to-br from-brand-50 to-brand-100 relative overflow-hidden"
+      >
         {/* Animated Background Pattern */}
         <motion.div
           className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-brand-500 via-brand-400 to-brand-500"
@@ -355,45 +363,41 @@ export function LandingPage() {
             transition={{ duration: 0.6 }}
             viewport={{ once: true }}
           >
-            How It Works
+            {t("howItWorks")}
           </motion.h2>
           <div className="grid md:grid-cols-4 gap-8">
             {[
               {
                 num: 1,
-                title: "Sign Up",
-                desc: "Quick registration with your delivery platform details",
+                title: t("step1Title"),
+                desc: t("step1Desc"),
                 color: "blue",
-                delay: 0
               },
               {
                 num: 2,
-                title: "Choose Plan",
-                desc: "Select Normal or Premium coverage based on your needs",
+                title: t("step2Title"),
+                desc: t("step2Desc"),
                 color: "indigo",
-                delay: 0.2
               },
               {
                 num: 3,
-                title: "AI Monitors",
-                desc: "Our AI tracks weather, AQI, and demand in real-time",
+                title: t("step3Title"),
+                desc: t("step3Desc"),
                 color: "purple",
-                delay: 0.4
               },
               {
                 num: 4,
-                title: "Auto Payout",
-                desc: "Instant compensation when disruptions are detected",
+                title: t("step4Title"),
+                desc: t("step4Desc"),
                 color: "green",
-                delay: 0.6
-              }
+              },
             ].map((step) => (
               <motion.div
                 key={step.num}
                 className="text-center relative"
                 initial={{ opacity: 0, y: 50, rotateY: -30 }}
                 whileInView={{ opacity: 1, y: 0, rotateY: 0 }}
-                transition={{ duration: 0.6, delay: step.delay }}
+                transition={{ duration: 0.6, delay: (step.num - 1) * 0.2 }}
                 viewport={{ once: true }}
                 whileHover={{
                   y: -15,
@@ -409,12 +413,19 @@ export function LandingPage() {
                   }}
                   transition={{ type: "spring", stiffness: 260, damping: 20 }}
                   style={{
-                    background: step.color === "blue" ? "#009AFD" :
-                               step.color === "indigo" ? "#0087E0" :
-                               step.color === "purple" ? "#7c3aed" : "#10b981"
+                    background:
+                      step.color === "blue"
+                        ? "#009AFD"
+                        : step.color === "indigo"
+                          ? "#0087E0"
+                          : step.color === "purple"
+                            ? "#7c3aed"
+                            : "#10b981",
                   }}
                 >
-                  <span className="text-white text-3xl font-bold">{step.num}</span>
+                  <span className="text-white text-3xl font-bold">
+                    {step.num}
+                  </span>
                 </motion.div>
                 <h3 className="font-semibold mb-2 text-lg">{step.title}</h3>
                 <p className="text-gray-600">{step.desc}</p>
@@ -425,7 +436,10 @@ export function LandingPage() {
                     className="hidden md:block absolute top-10 left-[60%] w-[80%] h-0.5 bg-gradient-to-r from-brand-300 to-transparent"
                     initial={{ scaleX: 0 }}
                     whileInView={{ scaleX: 1 }}
-                    transition={{ duration: 0.8, delay: step.delay + 0.3 }}
+                    transition={{
+                      duration: 0.8,
+                      delay: (step.num - 1) * 0.2 + 0.3,
+                    }}
                     viewport={{ once: true }}
                     style={{ transformOrigin: "left" }}
                   />
@@ -437,7 +451,10 @@ export function LandingPage() {
       </section>
 
       {/* Features */}
-      <section id="features" className="py-16 bg-white relative overflow-hidden">
+      <section
+        id="features"
+        className="py-16 bg-white relative overflow-hidden"
+      >
         <div className="max-w-7xl mx-auto px-6 relative z-10">
           <motion.h2
             className="text-3xl font-bold text-center text-gray-900 mb-12"
@@ -446,32 +463,32 @@ export function LandingPage() {
             transition={{ duration: 0.6 }}
             viewport={{ once: true }}
           >
-            Key Features
+            {t("featuresTitle")}
           </motion.h2>
 
           <div className="grid md:grid-cols-3 gap-8">
             {[
               {
                 icon: Zap,
-                title: "AI-Powered Detection",
-                desc: "Advanced AI monitors weather, pollution, and delivery demand to automatically detect disruptions",
+                title: t("feature1Title"),
+                desc: t("feature1Desc"),
+                image: "/images/feature1.jpg",
                 color: "blue",
-                image: "/images/feature-rain.jpg"
               },
               {
                 icon: Clock,
-                title: "Instant Claims",
-                desc: "No paperwork, no waiting. Claims are automatically triggered and processed in minutes",
+                title: t("feature2Title"),
+                desc: t("feature2Desc"),
+                image: "/images/feature2.jpg",
                 color: "green",
-                image: "/images/feature-payment.jpg"
               },
               {
                 icon: TrendingUp,
-                title: "Earnings Protection",
-                desc: "Protect up to ₹3000/week with our Premium plan and keep your income stable",
+                title: t("feature3Title"),
+                desc: t("feature3Desc"),
+                image: "/images/feature3.jpg",
                 color: "blue",
-                image: "/images/feature-city.jpg"
-              }
+              },
             ].map((feature, index) => (
               <motion.div
                 key={feature.title}
@@ -496,7 +513,7 @@ export function LandingPage() {
                     style={{
                       backgroundImage: `url(${feature.image})`,
                       backgroundSize: "cover",
-                      backgroundPosition: "center"
+                      backgroundPosition: "center",
                     }}
                   />
 
@@ -504,27 +521,35 @@ export function LandingPage() {
                     whileHover={{ scale: 1.2, rotate: 360 }}
                     transition={{ type: "spring", stiffness: 260, damping: 20 }}
                   >
-                    <feature.icon className={`w-12 h-12 text-${feature.color}-600 mb-4 relative z-10`} style={{ color: feature.color === "blue" ? "#009AFD" : "#10b981" }} />
+                    <feature.icon
+                      className={`w-12 h-12 text-${feature.color}-600 mb-4 relative z-10`}
+                      style={{
+                        color: feature.color === "blue" ? "#009AFD" : "#10b981",
+                      }}
+                    />
                   </motion.div>
-                  <h3 className="text-xl font-semibold mb-2 relative z-10">{feature.title}</h3>
-                  <p className="text-gray-600 relative z-10">
-                    {feature.desc}
-                  </p>
+                  <h3 className="text-xl font-semibold mb-2 relative z-10">
+                    {feature.title}
+                  </h3>
+                  <p className="text-gray-600 relative z-10">{feature.desc}</p>
 
                   {/* 3D Effect Decorative Element */}
                   <motion.div
                     className={`absolute -bottom-6 -right-6 w-24 h-24 rounded-full blur-2xl`}
                     style={{
-                      background: feature.color === "blue" ? "rgba(0, 154, 253, 0.3)" : "rgba(16, 185, 129, 0.3)"
+                      background:
+                        feature.color === "blue"
+                          ? "rgba(0, 154, 253, 0.3)"
+                          : "rgba(16, 185, 129, 0.3)",
                     }}
                     animate={{
                       scale: [1, 1.2, 1],
-                      opacity: [0.3, 0.5, 0.3]
+                      opacity: [0.3, 0.5, 0.3],
                     }}
                     transition={{
                       duration: 3,
                       repeat: Infinity,
-                      ease: "easeInOut"
+                      ease: "easeInOut",
                     }}
                   />
                 </motion.div>
@@ -544,7 +569,7 @@ export function LandingPage() {
             transition={{ duration: 0.6 }}
             viewport={{ once: true }}
           >
-            Trusted by Delivery Heroes
+            <h2>{t("testimonialsTitle")}</h2>
           </motion.h2>
 
           <div className="grid md:grid-cols-3 gap-6">
@@ -553,20 +578,23 @@ export function LandingPage() {
                 name: "Rajesh Kumar",
                 role: "Zomato Partner",
                 img: "/images/testimonial1.jpg",
-                quote: "During monsoon, I used to lose ₹5000+ monthly. Now InsureGig covers my losses automatically!"
+                quote:
+                  "During monsoon, I used to lose ₹5000+ monthly. Now InsureGig covers my losses automatically!",
               },
               {
                 name: "Priya Sharma",
                 role: "Swiggy Partner",
                 img: "/images/testimonial2.jpg",
-                quote: "Best decision! No paperwork, instant payouts. The AI really works - got paid within 2 hours of heavy rain."
+                quote:
+                  "Best decision! No paperwork, instant payouts. The AI really works - got paid within 2 hours of heavy rain.",
               },
               {
                 name: "Mohammed Ali",
                 role: "Delivery Executive",
                 img: "/images/testimonial3.jpg",
-                quote: "Finally, someone understands our struggles. Premium plan worth every rupee for peace of mind."
-              }
+                quote:
+                  "Finally, someone understands our struggles. Premium plan worth every rupee for peace of mind.",
+              },
             ].map((testimonial, index) => (
               <motion.div
                 key={testimonial.name}
@@ -578,7 +606,7 @@ export function LandingPage() {
                 whileHover={{
                   y: -10,
                   rotateY: 5,
-                  scale: 1.05
+                  scale: 1.05,
                 }}
                 style={{ transformStyle: "preserve-3d" }}
               >
@@ -589,11 +617,19 @@ export function LandingPage() {
                       whileHover={{ scale: 1.2, rotate: 360 }}
                       transition={{ type: "spring", stiffness: 300 }}
                     >
-                      <img src={testimonial.img} alt={testimonial.name} className="w-full h-full object-cover" />
+                      <img
+                        src={testimonial.img}
+                        alt={testimonial.name}
+                        className="w-full h-full object-cover"
+                      />
                     </motion.div>
                     <div>
-                      <h4 className="font-bold text-gray-900">{testimonial.name}</h4>
-                      <p className="text-sm text-gray-600">{testimonial.role}</p>
+                      <h4 className="font-bold text-gray-900">
+                        {testimonial.name}
+                      </h4>
+                      <p className="text-sm text-gray-600">
+                        {testimonial.role}
+                      </p>
                     </div>
                   </div>
                   <p className="text-gray-700 italic">"{testimonial.quote}"</p>
@@ -624,24 +660,24 @@ export function LandingPage() {
           className="absolute top-10 right-20 w-64 h-64 bg-white/10 rounded-full blur-3xl"
           animate={{
             scale: [1, 1.2, 1],
-            opacity: [0.3, 0.5, 0.3]
+            opacity: [0.3, 0.5, 0.3],
           }}
           transition={{
             duration: 4,
             repeat: Infinity,
-            ease: "easeInOut"
+            ease: "easeInOut",
           }}
         />
         <motion.div
           className="absolute bottom-10 left-20 w-80 h-80 bg-white/10 rounded-full blur-3xl"
           animate={{
             scale: [1.2, 1, 1.2],
-            opacity: [0.5, 0.3, 0.5]
+            opacity: [0.5, 0.3, 0.5],
           }}
           transition={{
             duration: 5,
             repeat: Infinity,
-            ease: "easeInOut"
+            ease: "easeInOut",
           }}
         />
 
@@ -653,8 +689,9 @@ export function LandingPage() {
             transition={{ duration: 0.6 }}
             viewport={{ once: true }}
           >
-            Ready to Protect Your Income?
+            {t("ctaTitle")}
           </motion.h2>
+
           <motion.p
             className="text-xl mb-8"
             initial={{ opacity: 0, y: 30 }}
@@ -662,7 +699,7 @@ export function LandingPage() {
             transition={{ duration: 0.6, delay: 0.2 }}
             viewport={{ once: true }}
           >
-            Join thousands of delivery workers who trust InsureGig
+            {t("ctaSubtitle")}
           </motion.p>
 
           <motion.div
@@ -680,7 +717,7 @@ export function LandingPage() {
               >
                 10K+
               </motion.div>
-              <div className="text-sm text-brand-100">Active Users</div>
+              <div>{t("activeUsers")}</div>{" "}
             </div>
             <div className="text-center">
               <motion.div
@@ -690,7 +727,7 @@ export function LandingPage() {
               >
                 ₹2.5Cr
               </motion.div>
-              <div className="text-sm text-brand-100">Paid Out</div>
+              <div>{t("paidOut")}</div>{" "}
             </div>
             <div className="text-center">
               <motion.div
@@ -700,7 +737,7 @@ export function LandingPage() {
               >
                 98%
               </motion.div>
-              <div className="text-sm text-brand-100">Satisfaction</div>
+              <div>{t("satisfaction")}</div>{" "}
             </div>
           </motion.div>
 
@@ -712,8 +749,12 @@ export function LandingPage() {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
-            <Button size="lg" onClick={() => navigate("/auth")} className="bg-white text-brand-500 hover:bg-gray-100 text-lg px-8 py-6">
-              Get Started Now
+            <Button
+              size="lg"
+              onClick={() => navigate("/auth")}
+              className="bg-white text-brand-500 hover:bg-gray-100 text-lg px-8 py-6"
+            >
+              {t("getStarted")}
             </Button>
           </motion.div>
         </div>
@@ -722,7 +763,7 @@ export function LandingPage() {
       {/* Footer */}
       <footer className="bg-gray-900 text-gray-400 py-8">
         <div className="max-w-7xl mx-auto px-6 text-center">
-          <p>&copy; 2026 InsureGig. Protecting delivery workers with AI.</p>
+          <p>{t("footerText")}</p>
         </div>
       </footer>
     </div>

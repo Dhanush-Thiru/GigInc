@@ -10,6 +10,7 @@ import { motion } from "motion/react";
 import { PayNowButton } from "../components/ui/PayNowButton";
 import { mockApi } from "../../services/mockApi";
 import { isPremiumModelReady, loadPremiumModel } from "../../services/mlEngine";
+import { useTranslation } from "react-i18next";
 
 const MIN_WEEKLY_PREMIUM = 20;
 const MAX_WEEKLY_PREMIUM = 50;
@@ -24,6 +25,7 @@ function formatCurrency(amount: number) {
 
 export function PlansPage() {
   const navigate = useNavigate();
+  const { t } = useTranslation("plans");
   const [selectedPlan, setSelectedPlan] = useState<"normal" | "premium">("premium");
   const [purchasedPlan, setPurchasedPlan] = useState<"normal" | "premium" | null>(null);
   const [normalPlanPremium, setNormalPlanPremium] = useState(25);
@@ -84,7 +86,7 @@ export function PlansPage() {
 
         if (!isMounted) return;
 
-        const normalPremium = 28; // fixed affordable base tier
+        const normalPremium = 28;
         const premiumPremium = clampPremium(basePremium, 33, MAX_WEEKLY_PREMIUM);
 
         setNormalPlanPremium(normalPremium);
@@ -112,7 +114,7 @@ export function PlansPage() {
   const handleSelectPlan = (plan: "normal" | "premium") => {
     if (purchasedPlan) return;
     setSelectedPlan(plan);
-    toast.success(`${plan === "normal" ? "Normal" : "Premium"} plan selected.`);
+    toast.success(`${plan === "normal" ? t("normalPlan") : t("premiumPlan")} selected.`);
   };
 
   const activatePlan = (plan: "normal" | "premium", premiumAmount: number, paymentId: string) => {
@@ -129,7 +131,7 @@ export function PlansPage() {
       planType: plan,
     }));
 
-    toast.success(`${plan === "normal" ? "Normal" : "Premium"} plan activated.`);
+    toast.success(`${plan === "normal" ? t("normalPlan") : t("premiumPlan")} activated.`);
     navigate("/dashboard");
   };
 
@@ -138,29 +140,13 @@ export function PlansPage() {
       {/* Animated Background */}
       <motion.div
         className="absolute top-0 right-0 w-96 h-96 bg-brand-400/10 rounded-full blur-3xl pointer-events-none"
-        animate={{
-          y: [0, 50, 0],
-          x: [0, 30, 0],
-          scale: [1, 1.2, 1]
-        }}
-        transition={{
-          duration: 8,
-          repeat: Infinity,
-          ease: "easeInOut"
-        }}
+        animate={{ y: [0, 50, 0], x: [0, 30, 0], scale: [1, 1.2, 1] }}
+        transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
       />
       <motion.div
         className="absolute bottom-0 left-0 w-80 h-80 bg-purple-400/10 rounded-full blur-3xl pointer-events-none"
-        animate={{
-          y: [0, -40, 0],
-          x: [0, -20, 0],
-          scale: [1.2, 1, 1.2]
-        }}
-        transition={{
-          duration: 10,
-          repeat: Infinity,
-          ease: "easeInOut"
-        }}
+        animate={{ y: [0, -40, 0], x: [0, -20, 0], scale: [1.2, 1, 1.2] }}
+        transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
       />
 
       {/* Header */}
@@ -169,8 +155,8 @@ export function PlansPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
       >
-        <h1 className="text-3xl font-bold text-gray-900">Insurance Plans</h1>
-        <p className="text-gray-600">Choose a plan and complete payment to unlock the rest of the app</p>
+        <h1 className="text-3xl font-bold text-gray-900">{t("pageTitle")}</h1>
+        <p className="text-gray-600">{t("pageSubtitle")}</p>
       </motion.div>
 
       {/* Current Plan */}
@@ -196,9 +182,9 @@ export function PlansPage() {
                   <Shield className="w-10 h-10 text-brand-500" />
                 </motion.div>
                 <div>
-                  <p className="text-sm text-brand-900 font-medium">Current Plan</p>
+                  <p className="text-sm text-brand-900 font-medium">{t("currentPlan")}</p>
                   <p className="text-2xl font-bold text-brand-900 flex items-center gap-2">
-                    {selectedPlan === "normal" ? "Normal Plan" : "Premium Plan"}
+                    {selectedPlan === "normal" ? t("normalPlan") : t("premiumPlan")}
                     {selectedPlan === "premium" && (
                       <motion.div
                         animate={{ rotate: [0, 10, -10, 0], scale: [1, 1.2, 1] }}
@@ -211,7 +197,7 @@ export function PlansPage() {
                 </div>
               </div>
               <Badge className={purchasedPlan ? "bg-green-600 px-3 py-1 shadow-md shadow-green-200" : "bg-brand-500 shadow-md shadow-brand-200"}>
-                {purchasedPlan ? "Policy Active" : "Pending Payment"}
+                {purchasedPlan ? t("policyActive") : t("pendingPayment")}
               </Badge>
             </div>
           </CardContent>
@@ -231,25 +217,15 @@ export function PlansPage() {
           <Card className={`relative overflow-hidden h-full ${selectedPlan === "normal" ? "border-brand-500 border-2" : ""}`}>
             <motion.div
               className="absolute top-0 right-0 w-40 h-40 bg-brand-400/20 rounded-full blur-2xl"
-              animate={{
-                scale: [1, 1.3, 1],
-                opacity: [0.3, 0.5, 0.3]
-              }}
-              transition={{
-                duration: 3,
-                repeat: Infinity,
-                ease: "easeInOut"
-              }}
+              animate={{ scale: [1, 1.3, 1], opacity: [0.3, 0.5, 0.3] }}
+              transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
             />
             <CardHeader className="relative z-10">
-              <motion.div
-                className="flex items-center gap-2 mb-2"
-                whileHover={{ x: 10 }}
-              >
+              <motion.div className="flex items-center gap-2 mb-2" whileHover={{ x: 10 }}>
                 <Shield className="w-6 h-6 text-brand-500" />
-                <CardTitle className="text-2xl">Normal Plan</CardTitle>
+                <CardTitle className="text-2xl">{t("normalPlan")}</CardTitle>
               </motion.div>
-              <CardDescription>Basic protection for delivery workers</CardDescription>
+              <CardDescription>{t("normalPlanDesc")}</CardDescription>
               <motion.div
                 className="mt-4"
                 initial={{ scale: 0 }}
@@ -257,20 +233,20 @@ export function PlansPage() {
                 transition={{ type: "spring", delay: 0.5 }}
               >
                 <span className="text-4xl font-bold text-gray-900">{formatCurrency(normalPlanPremium)}</span>
-                <span className="text-gray-600">/week</span>
+                <span className="text-gray-600">{t("perWeek")}</span>
               </motion.div>
             </CardHeader>
             <CardContent className="space-y-4 relative z-10">
               <div className="space-y-3">
                 {[
-                  `Coverage up to ${formatCurrency(normalPlanPremium * 40)}/week`,
-                  "Basic weather protection",
-                  "Rain coverage",
-                  "AI risk alerts",
-                  "Standard claim processing (24 hours)"
+                  t("normalFeatures.coverage", { amount: formatCurrency(normalPlanPremium * 40) }),
+                  t("normalFeatures.weather"),
+                  t("normalFeatures.rain"),
+                  t("normalFeatures.aiAlerts"),
+                  t("normalFeatures.claimTime"),
                 ].map((feature, index) => (
                   <motion.div
-                    key={feature}
+                    key={index}
                     className="flex items-start gap-2"
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
@@ -285,12 +261,12 @@ export function PlansPage() {
               <motion.div whileHover={purchasedPlan ? {} : { scale: 1.05 }} whileTap={purchasedPlan ? {} : { scale: 0.95 }}>
                 {purchasedPlan === "normal" ? (
                   <div className="flex items-center justify-center gap-2 bg-green-50 border border-green-200 text-green-700 px-6 py-3 rounded-xl font-semibold">
-                    Policy Active
+                    {t("policyActive")}
                   </div>
                 ) : purchasedPlan ? (
-                  <Button disabled className="w-full bg-gray-200 text-gray-500 shadow-none border-0">Plan Unavailable</Button>
+                  <Button disabled className="w-full bg-gray-200 text-gray-500 shadow-none border-0">{t("planUnavailable")}</Button>
                 ) : isCalculatingPremium ? (
-                  <Button disabled className="w-full bg-gray-200 text-gray-500 shadow-none border-0">Calculating premium...</Button>
+                  <Button disabled className="w-full bg-gray-200 text-gray-500 shadow-none border-0">{t("calculatingPremium")}</Button>
                 ) : (
                   <div onClick={() => handleSelectPlan("normal")}>
                     <PayNowButton
@@ -317,64 +293,37 @@ export function PlansPage() {
           style={{ transformStyle: "preserve-3d" }}
         >
           <Card className={`relative overflow-hidden h-full ${selectedPlan === "premium" ? "border-brand-500 border-2" : ""} bg-gradient-to-br from-white to-brand-50`}>
-            {/* Animated Badge */}
             <motion.div
               className="absolute top-4 right-4 z-20"
-              animate={{
-                rotate: [0, 5, -5, 0],
-                scale: [1, 1.1, 1]
-              }}
-              transition={{
-                duration: 2,
-                repeat: Infinity,
-                ease: "easeInOut"
-              }}
+              animate={{ rotate: [0, 5, -5, 0], scale: [1, 1.1, 1] }}
+              transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
             >
               <Badge className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white">
                 <Star className="w-3 h-3 mr-1" />
-                Recommended
+                {t("recommended")}
               </Badge>
             </motion.div>
 
-            {/* Animated Background */}
             <motion.div
               className="absolute top-0 right-0 w-40 h-40 bg-yellow-400/20 rounded-full blur-2xl"
-              animate={{
-                scale: [1.3, 1, 1.3],
-                opacity: [0.5, 0.3, 0.5]
-              }}
-              transition={{
-                duration: 3,
-                repeat: Infinity,
-                ease: "easeInOut"
-              }}
+              animate={{ scale: [1.3, 1, 1.3], opacity: [0.5, 0.3, 0.5] }}
+              transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
             />
-
             <motion.div
               className="absolute bottom-0 left-0 w-32 h-32 bg-brand-400/20 rounded-full blur-2xl"
-              animate={{
-                scale: [1, 1.3, 1],
-                opacity: [0.3, 0.5, 0.3]
-              }}
-              transition={{
-                duration: 4,
-                repeat: Infinity,
-                ease: "easeInOut"
-              }}
+              animate={{ scale: [1, 1.3, 1], opacity: [0.3, 0.5, 0.3] }}
+              transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
             />
 
             <CardHeader className="relative z-10">
-              <motion.div
-                className="flex items-center gap-2 mb-2"
-                whileHover={{ x: 10 }}
-              >
+              <motion.div className="flex items-center gap-2 mb-2" whileHover={{ x: 10 }}>
                 <Sparkles className="w-6 h-6 text-yellow-500" />
                 <CardTitle className="text-2xl flex items-center gap-2">
-                  Premium Plan
+                  {t("premiumPlan")}
                   <Star className="w-6 h-6 text-yellow-500 fill-yellow-500" />
                 </CardTitle>
               </motion.div>
-              <CardDescription>Maximum protection with instant payouts</CardDescription>
+              <CardDescription>{t("premiumPlanDesc")}</CardDescription>
               <motion.div
                 className="mt-4"
                 initial={{ scale: 0 }}
@@ -382,32 +331,29 @@ export function PlansPage() {
                 transition={{ type: "spring", delay: 0.6 }}
               >
                 <span className="text-4xl font-bold text-gray-900">{formatCurrency(premiumPlanPremium)}</span>
-                <span className="text-gray-600">/week</span>
+                <span className="text-gray-600">{t("perWeek")}</span>
               </motion.div>
             </CardHeader>
             <CardContent className="space-y-4 relative z-10">
               <div className="space-y-3">
                 {[
-                  { text: `Coverage up to ${formatCurrency(premiumPlanPremium * 60)}/week`, bold: true },
-                  { text: "Full weather protection", bold: false },
-                  { text: "All disruptions covered", bold: false },
-                  { text: "Instant automatic payouts", bold: true },
-                  { text: "Priority AI monitoring", bold: false },
-                  { text: "AQI & pollution coverage", bold: false },
-                  { text: "24/7 support", bold: false }
+                  { text: t("premiumFeatures.coverage", { amount: formatCurrency(premiumPlanPremium * 60) }), bold: true },
+                  { text: t("premiumFeatures.fullWeather"), bold: false },
+                  { text: t("premiumFeatures.allDisruptions"), bold: false },
+                  { text: t("premiumFeatures.instantPayouts"), bold: true },
+                  { text: t("premiumFeatures.priorityAI"), bold: false },
+                  { text: t("premiumFeatures.aqiCoverage"), bold: false },
+                  { text: t("premiumFeatures.support"), bold: false },
                 ].map((feature, index) => (
                   <motion.div
-                    key={feature.text}
+                    key={index}
                     className="flex items-start gap-2"
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.7 + index * 0.1 }}
                     whileHover={{ x: 10 }}
                   >
-                    <motion.div
-                      whileHover={{ rotate: 360, scale: 1.2 }}
-                      transition={{ type: "spring" }}
-                    >
+                    <motion.div whileHover={{ rotate: 360, scale: 1.2 }} transition={{ type: "spring" }}>
                       <Check className="w-5 h-5 text-green-600 mt-0.5" />
                     </motion.div>
                     <span className={`text-gray-700 ${feature.bold ? "font-medium" : ""}`}>
@@ -419,12 +365,12 @@ export function PlansPage() {
               <motion.div whileHover={purchasedPlan ? {} : { scale: 1.05 }} whileTap={purchasedPlan ? {} : { scale: 0.95 }}>
                 {purchasedPlan === "premium" ? (
                   <div className="flex items-center justify-center gap-2 bg-green-50 border border-green-200 text-green-700 px-6 py-3 rounded-xl font-semibold">
-                    Policy Active
+                    {t("policyActive")}
                   </div>
                 ) : purchasedPlan ? (
-                  <Button disabled className="w-full bg-gray-200 text-gray-500 shadow-none border-0">Plan Unavailable</Button>
+                  <Button disabled className="w-full bg-gray-200 text-gray-500 shadow-none border-0">{t("planUnavailable")}</Button>
                 ) : isCalculatingPremium ? (
-                  <Button disabled className="w-full bg-gray-200 text-gray-500 shadow-none border-0">Calculating premium...</Button>
+                  <Button disabled className="w-full bg-gray-200 text-gray-500 shadow-none border-0">{t("calculatingPremium")}</Button>
                 ) : (
                   <div onClick={() => handleSelectPlan("premium")}>
                     <PayNowButton
@@ -454,13 +400,12 @@ export function PlansPage() {
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2 text-base font-semibold text-gray-800">
                 <Info className="w-4 h-4 text-brand-500" />
-                How your premium is calculated
+                {t("actuarialTitle")}
               </CardTitle>
-              <CardDescription>Full actuarial breakdown — no hidden assumptions</CardDescription>
+              <CardDescription>{t("actuarialSubtitle")}</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-2 text-sm">
-                {/* Row helper */}
                 {[
                   {
                     label: "Trigger probability",
@@ -513,11 +458,10 @@ export function PlansPage() {
                   </div>
                 ))}
 
-                {/* Divider + final */}
                 <div className="border-t border-dashed border-gray-200 mt-3 pt-3 flex items-center justify-between px-3">
                   <div>
-                    <p className="font-semibold text-gray-900">Your weekly premium</p>
-                    <p className="text-xs text-gray-400">Clamped to ₹20–₹50 affordability range</p>
+                    <p className="font-semibold text-gray-900">{t("weeklyPremium")}</p>
+                    <p className="text-xs text-gray-400">{t("weeklyPremiumNote")}</p>
                   </div>
                   <span className="text-2xl font-bold text-brand-600">₹{premiumPlanPremium}</span>
                 </div>
@@ -541,11 +485,8 @@ export function PlansPage() {
           />
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              Plan Comparison
-              <motion.div
-                animate={{ scale: [1, 1.2, 1] }}
-                transition={{ duration: 2, repeat: Infinity }}
-              >
+              {t("comparisonTitle")}
+              <motion.div animate={{ scale: [1, 1.2, 1] }} transition={{ duration: 2, repeat: Infinity }}>
                 <Zap className="w-5 h-5 text-yellow-500" />
               </motion.div>
             </CardTitle>
@@ -555,19 +496,19 @@ export function PlansPage() {
               <table className="w-full">
                 <thead>
                   <tr className="border-b">
-                    <th className="text-left py-3 px-4 font-medium text-gray-900">Feature</th>
-                    <th className="text-center py-3 px-4 font-medium text-gray-900">Normal</th>
-                    <th className="text-center py-3 px-4 font-medium text-gray-900">Premium</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-900">{t("comparisonFeature")}</th>
+                    <th className="text-center py-3 px-4 font-medium text-gray-900">{t("comparisonNormal")}</th>
+                    <th className="text-center py-3 px-4 font-medium text-gray-900">{t("comparisonPremium")}</th>
                   </tr>
                 </thead>
                 <tbody>
                   {[
-                    { feature: "Weekly Cost", normal: formatCurrency(normalPlanPremium), premium: formatCurrency(premiumPlanPremium), type: "text" },
-                    { feature: "Maximum Coverage", normal: formatCurrency(normalPlanPremium * 40), premium: formatCurrency(premiumPlanPremium * 60), type: "text" },
-                    { feature: "Claim Processing Time", normal: "24 hours", premium: "Instant", type: "highlight" },
-                    { feature: "Rain Coverage", normal: "check", premium: "check", type: "check" },
-                    { feature: "AQI/Pollution Coverage", normal: "-", premium: "check", type: "check" },
-                    { feature: "All Disruptions", normal: "-", premium: "check", type: "check" }
+                    { feature: t("comparisonRows.weeklyCost"), normal: formatCurrency(normalPlanPremium), premium: formatCurrency(premiumPlanPremium), type: "text" },
+                    { feature: t("comparisonRows.maxCoverage"), normal: formatCurrency(normalPlanPremium * 40), premium: formatCurrency(premiumPlanPremium * 60), type: "text" },
+                    { feature: t("comparisonRows.claimTime"), normal: t("claimTimeNormal"), premium: t("claimTimePremium"), type: "highlight" },
+                    { feature: t("comparisonRows.rainCoverage"), normal: "check", premium: "check", type: "check" },
+                    { feature: t("comparisonRows.aqiCoverage"), normal: "-", premium: "check", type: "check" },
+                    { feature: t("comparisonRows.allDisruptions"), normal: "-", premium: "check", type: "check" },
                   ].map((row, index) => (
                     <motion.tr
                       key={row.feature}
@@ -592,10 +533,7 @@ export function PlansPage() {
                       <td className="py-3 px-4 text-center">
                         {row.type === "check" ? (
                           row.premium === "check" ? (
-                            <motion.div
-                              whileHover={{ scale: 1.3, rotate: 360 }}
-                              transition={{ type: "spring" }}
-                            >
+                            <motion.div whileHover={{ scale: 1.3, rotate: 360 }} transition={{ type: "spring" }}>
                               <Check className="w-5 h-5 text-green-600 mx-auto" />
                             </motion.div>
                           ) : (

@@ -1,26 +1,38 @@
 import { Outlet, useNavigate, useLocation } from "react-router";
 import { useEffect, useState } from "react";
-import { Shield, LayoutDashboard, FileText, AlertCircle, History, Settings, LogOut, Navigation } from "lucide-react";
+import {
+  Shield,
+  LayoutDashboard,
+  FileText,
+  AlertCircle,
+  History,
+  Settings,
+  LogOut,
+  Navigation,
+} from "lucide-react";
 import logoGig from "../../../assets/LogoGig.jpeg";
 import { Button } from "../components/ui/button";
+import { useTranslation } from "react-i18next";
+import LanguageSwitcher from "../components/ui/LanguageSwitcher";
 
 export function DashboardLayout() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { t } = useTranslation("dashboard");
   const [accessReady, setAccessReady] = useState(false);
   const [isPaidUser, setIsPaidUser] = useState(false);
   const [userName, setUserName] = useState("Gig Worker");
 
   const paidMenuItems = [
-    { path: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-    { path: "/dashboard/plans", label: "My Policy", icon: FileText },
-    { path: "/dashboard/claims", label: "Claims", icon: AlertCircle },
-    { path: "/dashboard/risk", label: "AI Risk", icon: Shield },
-    { path: "/dashboard/live-map", label: "Live Map", icon: Navigation },
-    { path: "/dashboard/history", label: "History", icon: History },
+    { path: "/dashboard", label: t("dashboard"), icon: LayoutDashboard },
+    { path: "/dashboard/plans", label: t("myPolicy"), icon: FileText },
+    { path: "/dashboard/claims", label: t("claims"), icon: AlertCircle },
+    { path: "/dashboard/risk", label: t("aiRisk"), icon: Shield },
+    { path: "/dashboard/live-map", label: t("liveMap"), icon: Navigation },
+    { path: "/dashboard/history", label: t("history"), icon: History },
   ];
   const unpaidMenuItems = [
-    { path: "/dashboard/plans", label: "Choose Plan", icon: FileText },
+    { path: "/dashboard/plans", label: t("choosePlan"), icon: FileText },
   ];
   const menuItems = isPaidUser ? paidMenuItems : unpaidMenuItems;
 
@@ -61,10 +73,14 @@ export function DashboardLayout() {
       <aside className="w-64 bg-white border-r hidden md:flex flex-col">
         <div className="p-6 border-b">
           <div className="flex items-center">
-            <img src={logoGig} alt="InsureGig" className="h-24 w-auto object-contain" />
+            <img
+              src={logoGig}
+              alt="InsureGig"
+              className="h-24 w-auto object-contain"
+            />
           </div>
           <div className="mt-4">
-            <p className="text-sm text-gray-500">Signed in as</p>
+            <p className="text-sm text-gray-500">{t("signedInAs")}</p>
             <p className="text-lg font-semibold text-gray-900">{userName}</p>
           </div>
         </div>
@@ -91,12 +107,18 @@ export function DashboardLayout() {
         </nav>
 
         <div className="p-4 border-t space-y-2">
+          {/* Language Switcher */}
+          <div className="flex items-center gap-3 px-4 py-2">
+            <span className="text-sm text-gray-500">{t("language")}:</span>
+            <LanguageSwitcher />
+          </div>
+
           <button
             onClick={() => {}}
             className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-100"
           >
             <Settings className="w-5 h-5" />
-            <span>Settings</span>
+            <span>{t("settings")}</span>
           </button>
           <Button
             variant="ghost"
@@ -104,7 +126,7 @@ export function DashboardLayout() {
             className="w-full justify-start gap-3 text-red-600 hover:text-red-700 hover:bg-red-50"
           >
             <LogOut className="w-5 h-5" />
-            <span>Logout</span>
+            <span>{t("logout")}</span>
           </Button>
         </div>
       </aside>
@@ -112,19 +134,28 @@ export function DashboardLayout() {
       {/* Mobile Top Header */}
       <div className="md:hidden fixed top-0 left-0 right-0 bg-white border-b p-4 z-20 flex items-center justify-between">
         <div className="flex items-center gap-3 min-w-0">
-          <img src={logoGig} alt="InsureGig" className="h-16 w-auto object-contain shrink-0" />
+          <img
+            src={logoGig}
+            alt="InsureGig"
+            className="h-16 w-auto object-contain shrink-0"
+          />
           <div className="min-w-0">
-            <p className="text-xs text-gray-500">Signed in as</p>
-            <p className="text-sm font-semibold text-gray-900 truncate">{userName}</p>
+            <p className="text-xs text-gray-500">{t("signedInAs")}</p>
+            <p className="text-sm font-semibold text-gray-900 truncate">
+              {userName}
+            </p>
           </div>
         </div>
-        <button
-          onClick={handleLogout}
-          className="flex items-center gap-1 text-sm text-red-500 hover:text-red-600 transition-colors"
-        >
-          <LogOut className="w-4 h-4" />
-          <span>Logout</span>
-        </button>
+        <div className="flex items-center gap-3">
+          <LanguageSwitcher />
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-1 text-sm text-red-500 hover:text-red-600 transition-colors"
+          >
+            <LogOut className="w-4 h-4" />
+            <span>{t("logout")}</span>
+          </button>
+        </div>
       </div>
 
       {/* Main Content */}
@@ -151,7 +182,9 @@ export function DashboardLayout() {
               }`}
             >
               <Icon className={`w-5 h-5 ${isActive ? "stroke-[2.5]" : ""}`} />
-              <span className="text-[10px] font-medium leading-tight">{item.label}</span>
+              <span className="text-[10px] font-medium leading-tight">
+                {item.label}
+              </span>
               {isActive && (
                 <span className="absolute bottom-0 w-6 h-0.5 bg-brand-500 rounded-full" />
               )}
