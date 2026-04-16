@@ -30,6 +30,8 @@ export interface StoredClaimRecord {
   explanation: string;
 }
 
+import { supabase } from "./supabaseClient";
+
 export interface StoredDisruptionRecord {
   id: string;
   date: string;
@@ -72,15 +74,33 @@ export function getStoredDisruptionHistory(): StoredDisruptionRecord[] {
 
 export function saveStoredClaimHistory(records: StoredClaimRecord[]) {
   localStorage.setItem(CLAIM_HISTORY_KEY, JSON.stringify(records));
+  if (supabase) {
+    supabase.from('claims').upsert(records).then(({ error }) => {
+      if (error) console.error("Supabase claims sync error:", error);
+    });
+  }
 }
 
 export function saveStoredDisruptionHistory(records: StoredDisruptionRecord[]) {
   localStorage.setItem(DISRUPTION_HISTORY_KEY, JSON.stringify(records));
+  if (supabase) {
+    supabase.from('disruptions').upsert(records).then(({ error }) => {
+      if (error) console.error("Supabase disruptions sync error:", error);
+    });
+  }
 }
 
 export function clearStoredClaimData() {
   localStorage.removeItem(CLAIM_HISTORY_KEY);
   localStorage.removeItem(DISRUPTION_HISTORY_KEY);
+  if (supabase) {
+    supabase.from('claims').delete().neq('id', '0').then(({ error }) => {
+      if (error) console.error("Supabase claims clear error:", error);
+    });
+    supabase.from('disruptions').delete().neq('id', '0').then(({ error }) => {
+      if (error) console.error("Supabase disruptions clear error:", error);
+    });
+  }
 }
 
 export function getDisruptionLabel(type: string) {

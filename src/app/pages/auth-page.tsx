@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../co
 import { LogIn, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 import logoGig from "../../../assets/insuregig.png";
+import { supabase } from "../../services/supabaseClient";
 
 export function AuthPage() {
   const navigate = useNavigate();
@@ -22,29 +23,46 @@ export function AuthPage() {
     persona: "hustler",
   });
   
-  const continueToPlans = () => {
+  const continueToPlans = async () => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(formData.email)) {
       toast.error("Please enter a valid email address.");
       return;
     }
-    
+
     const phoneRegex = /^\+?[0-9]{10,14}$/;
     if (!phoneRegex.test(formData.phone)) {
       toast.error("Please enter a valid 10-digit phone number.");
       return;
     }
-    
+
     if (!formData.name || !formData.location || !formData.dailyIncome) {
       toast.error("Please fill out all required fields properly.");
       return;
     }
 
-    localStorage.setItem("user", JSON.stringify({
+    const userData = {
       ...formData,
       dailyIncome: Number(formData.dailyIncome) || 0,
       premiumStatus: "pending",
-    }));
+    };
+
+    if (supabase) {
+      const { error } = await supabase.from('users').upsert({
+        name: userData.name,
+        email: userData.email,
+        phone: userData.phone,
+        platform: userData.platform,
+        location: userData.location,
+        vehicle: userData.vehicle,
+        daily_income: userData.dailyIncome,
+        premium_status: "pending",
+        plan_type: "none"
+      }, { onConflict: 'email' });
+      if (error) console.error("Supabase user insert error:", error);
+    }
+
+    localStorage.setItem("user", JSON.stringify(userData));
     navigate("/dashboard/plans");
   };
 

@@ -1,7 +1,7 @@
 import { Outlet, useNavigate, useLocation } from "react-router";
 import { useEffect, useState } from "react";
 import { Shield, LayoutDashboard, FileText, AlertCircle, History, Settings, LogOut, Navigation } from "lucide-react";
-import logoGig from "../../../assets/LogoGig.jpeg";
+import logoGig from "../../../assets/insuregig.png";
 import { Button } from "../components/ui/button";
 
 export function DashboardLayout() {
@@ -61,7 +61,7 @@ export function DashboardLayout() {
       <aside className="w-64 bg-white border-r hidden md:flex flex-col">
         <div className="p-6 border-b">
           <div className="flex items-center">
-            <img src={logoGig} alt="InsureGig" className="h-24 w-auto object-contain" />
+            <img src={logoGig} alt="InsureGig" className="w-[200px] h-[80px] object-contain object-center" />
           </div>
           <div className="mt-4">
             <p className="text-sm text-gray-500">Signed in as</p>
@@ -112,7 +112,7 @@ export function DashboardLayout() {
       {/* Mobile Top Header */}
       <div className="md:hidden fixed top-0 left-0 right-0 bg-white border-b p-4 z-20 flex items-center justify-between">
         <div className="flex items-center gap-3 min-w-0">
-          <img src={logoGig} alt="InsureGig" className="h-16 w-auto object-contain shrink-0" />
+          <img src={logoGig} alt="InsureGig" className="w-[150px] h-[60px] object-contain object-center shrink-0" />
           <div className="min-w-0">
             <p className="text-xs text-gray-500">Signed in as</p>
             <p className="text-sm font-semibold text-gray-900 truncate">{userName}</p>
