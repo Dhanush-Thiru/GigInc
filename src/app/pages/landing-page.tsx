@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router";
 import { Button } from "../components/ui/button";
 import { Zap, TrendingUp, Clock, CloudRain, Wind, DollarSign, Award, Menu, X, Users } from "lucide-react";
-import logoGig from "../../../assets/LogoGig.jpeg";
+import logoGig from "../../../assets/insuregig.png";
 import { motion, AnimatePresence } from "motion/react";
 import { useEffect, useState } from "react";
 
@@ -64,7 +64,7 @@ export function LandingPage() {
             whileHover={{ scale: 1.05 }}
             transition={{ type: "spring", stiffness: 400 }}
           >
-            <img src={logoGig} alt="InsureGig" className="h-24 md:h-28 w-auto object-contain" />
+            <img src={logoGig} alt="InsureGig" className="w-[250px] h-[100px] object-contain object-center" />
           </motion.div>
 
           {/* Desktop Nav */}

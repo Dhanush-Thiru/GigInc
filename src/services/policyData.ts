@@ -43,16 +43,7 @@ export interface StoredDisruptionRecord {
   description: string;
 }
 
-import { supabase } from "./supabaseClient";
-
-export async function getStoredUserProfile(): Promise<StoredUserProfile> {
-  if (supabase) {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user) {
-       const { data } = await supabase.from('users').select('*').eq('id', user.id).single();
-       if (data) return data;
-    }
-  }
+export function getStoredUserProfile(): StoredUserProfile {
   try {
     const saved = localStorage.getItem("user");
     return saved ? JSON.parse(saved) : {};
@@ -61,11 +52,7 @@ export async function getStoredUserProfile(): Promise<StoredUserProfile> {
   }
 }
 
-export async function getStoredClaimHistory(): Promise<StoredClaimRecord[]> {
-  if (supabase) {
-    const { data } = await supabase.from('claims').select('*').order('date', { ascending: true });
-    if (data) return data as StoredClaimRecord[];
-  }
+export function getStoredClaimHistory(): StoredClaimRecord[] {
   try {
     const saved = localStorage.getItem(CLAIM_HISTORY_KEY);
     return saved ? JSON.parse(saved) : [];
@@ -74,11 +61,7 @@ export async function getStoredClaimHistory(): Promise<StoredClaimRecord[]> {
   }
 }
 
-export async function getStoredDisruptionHistory(): Promise<StoredDisruptionRecord[]> {
-  if (supabase) {
-    const { data } = await supabase.from('disruptions').select('*').order('date', { ascending: true });
-    if (data) return data as StoredDisruptionRecord[];
-  }
+export function getStoredDisruptionHistory(): StoredDisruptionRecord[] {
   try {
     const saved = localStorage.getItem(DISRUPTION_HISTORY_KEY);
     return saved ? JSON.parse(saved) : [];
@@ -87,32 +70,18 @@ export async function getStoredDisruptionHistory(): Promise<StoredDisruptionReco
   }
 }
 
-export async function saveStoredClaimHistory(records: StoredClaimRecord[]) {
-  if (supabase) {
-     // For simplicity in sync logic, upsert all
-     const { error } = await supabase.from('claims').upsert(records);
-     if (error) console.error("Supabase claims error:", error);
-  }
+export function saveStoredClaimHistory(records: StoredClaimRecord[]) {
   localStorage.setItem(CLAIM_HISTORY_KEY, JSON.stringify(records));
 }
 
-export async function saveStoredDisruptionHistory(records: StoredDisruptionRecord[]) {
-  if (supabase) {
-    const { error } = await supabase.from('disruptions').upsert(records);
-    if (error) console.error("Supabase disruptions error:", error);
-  }
+export function saveStoredDisruptionHistory(records: StoredDisruptionRecord[]) {
   localStorage.setItem(DISRUPTION_HISTORY_KEY, JSON.stringify(records));
 }
 
-export async function clearStoredClaimData() {
-  if (supabase) {
-    await supabase.from('claims').delete().neq('id', '0'); // Delete all
-    await supabase.from('disruptions').delete().neq('id', '0');
-  }
+export function clearStoredClaimData() {
   localStorage.removeItem(CLAIM_HISTORY_KEY);
   localStorage.removeItem(DISRUPTION_HISTORY_KEY);
 }
-
 
 export function getDisruptionLabel(type: string) {
   switch (type) {

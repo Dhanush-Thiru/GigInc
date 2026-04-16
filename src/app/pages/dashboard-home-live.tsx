@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
-import { Shield, TrendingUp, AlertTriangle, CheckCircle, Clock, Sparkles, Phone, Mail, MapPin, FileText } from "lucide-react";
+import { Shield, TrendingUp, AlertTriangle, CheckCircle, Clock, Phone, Mail, MapPin, FileText, Camera, Sparkles, User } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { motion } from "motion/react";
 import {
@@ -52,18 +52,28 @@ export function DashboardHomeLive() {
   const [user, setUser] = useState<StoredUserProfile>({});
   const [claimHistory, setClaimHistory] = useState<StoredClaimRecord[]>([]);
   const [disruptionHistory, setDisruptionHistory] = useState<StoredDisruptionRecord[]>([]);
+  const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
+  const photoInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    async function load() {
-      const u = await getStoredUserProfile();
-      const c = await getStoredClaimHistory();
-      const d = await getStoredDisruptionHistory();
-      setUser(u);
-      setClaimHistory(c);
-      setDisruptionHistory(d);
-    }
-    load();
+    setUser(getStoredUserProfile());
+    setClaimHistory(getStoredClaimHistory());
+    setDisruptionHistory(getStoredDisruptionHistory());
+    const saved = localStorage.getItem("userProfilePhoto");
+    if (saved) setProfilePhoto(saved);
   }, []);
+
+  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const dataUrl = ev.target?.result as string;
+      setProfilePhoto(dataUrl);
+      localStorage.setItem("userProfilePhoto", dataUrl);
+    };
+    reader.readAsDataURL(file);
+  };
 
   const weeklyChartData = useMemo(() => {
     const recentClaims = [...claimHistory].slice(-7);
@@ -144,9 +154,40 @@ export function DashboardHomeLive() {
             <CardContent className="space-y-5">
               <div className="flex flex-col gap-5 lg:flex-row lg:items-start">
                 <div className="flex items-center gap-4 lg:w-72 lg:shrink-0">
-                  <div className="flex h-24 w-24 shrink-0 items-center justify-center rounded-3xl bg-gradient-to-br from-brand-500 to-brand-300 text-3xl font-bold text-white shadow-lg">
-                    {avatarLetters || "GW"}
-                  </div>
+                  {/* Clickable avatar — uploads profile photo */}
+                  <input
+                    ref={photoInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handlePhotoChange}
+                  />
+                  <motion.div
+                    className="relative flex h-24 w-24 shrink-0 cursor-pointer items-center justify-center rounded-3xl shadow-lg overflow-hidden group"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.97 }}
+                    onClick={() => photoInputRef.current?.click()}
+                    title="Click to upload profile photo"
+                  >
+                    {profilePhoto ? (
+                      <img
+                        src={profilePhoto}
+                        alt="Profile"
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-brand-500 to-brand-300 text-white">
+                        <User className="w-10 h-10 opacity-90" />
+                      </div>
+                    )}
+                    {/* Camera overlay on hover */}
+                    <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                      <Camera className="w-6 h-6 text-white" />
+                      <span className="text-[10px] text-white font-medium leading-tight text-center px-1">
+                        {profilePhoto ? "Change" : "Add Photo"}
+                      </span>
+                    </div>
+                  </motion.div>
                   <div className="min-w-0">
                     <h2 className="text-2xl font-bold text-gray-900">{user.name || "Gig Worker"}</h2>
                     <p className="text-sm text-gray-500">{user.platform || "Delivery Partner"} in {user.location || "India"}</p>

@@ -6,8 +6,8 @@ import { Label } from "../components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
 import { LogIn, UserPlus } from "lucide-react";
-import logoGig from "../../../assets/LogoGig.jpeg";
-import { supabase } from "../../services/supabaseClient";
+import { toast } from "sonner";
+import logoGig from "../../../assets/insuregig.png";
 
 export function AuthPage() {
   const navigate = useNavigate();
@@ -18,33 +18,31 @@ export function AuthPage() {
     platform: "",
     location: "",
     vehicle: "bike",
-    dailyIncome: 500,
+    dailyIncome: "",
     persona: "hustler",
   });
-  const continueToPlans = async () => {
-    const userData = {
-      ...formData,
-      premium_status: "pending",
-      daily_income: formData.dailyIncome // match DB schema
-    };
-    
-    if (supabase) {
-      const { error } = await supabase.from('users').upsert({
-        name: userData.name,
-        email: userData.email,
-        phone: userData.phone,
-        platform: userData.platform,
-        location: userData.location,
-        vehicle: userData.vehicle,
-        daily_income: userData.dailyIncome,
-        premium_status: "pending",
-        plan_type: "none"
-      }, { onConflict: 'email' });
-      if (error) console.error("Supabase user insert error:", error);
+  
+  const continueToPlans = () => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      toast.error("Please enter a valid email address.");
+      return;
     }
     
+    const phoneRegex = /^\+?[0-9]{10,14}$/;
+    if (!phoneRegex.test(formData.phone)) {
+      toast.error("Please enter a valid 10-digit phone number.");
+      return;
+    }
+    
+    if (!formData.name || !formData.location || !formData.dailyIncome) {
+      toast.error("Please fill out all required fields properly.");
+      return;
+    }
+
     localStorage.setItem("user", JSON.stringify({
       ...formData,
+      dailyIncome: Number(formData.dailyIncome) || 0,
       premiumStatus: "pending",
     }));
     navigate("/dashboard/plans");
@@ -54,7 +52,7 @@ export function AuthPage() {
     <div className="min-h-screen bg-gradient-to-br from-brand-50 to-brand-100 flex items-center justify-center p-6">
       <div className="w-full max-w-md my-8">
         <div className="flex items-center justify-center gap-2 mb-8">
-          <img src={logoGig} alt="InsureGig" className="h-28 md:h-32 w-auto object-contain" />
+          <img src={logoGig} alt="InsureGig" className="w-[250px] h-[100px] object-contain object-center" />
         </div>
 
         <Card>
@@ -112,9 +110,12 @@ export function AuthPage() {
                     id="dailyIncome"
                     type="number"
                     value={formData.dailyIncome}
-                    onChange={(e) => setFormData({ ...formData, dailyIncome: parseInt(e.target.value) || 0 })}
+                    onChange={(e) => setFormData({ ...formData, dailyIncome: e.target.value })}
                     required
                   />
+                  <p className="text-xs text-gray-500 font-medium mt-1">
+                    NOTE : This amount will be used to calculate you plan .
+                  </p>
                 </div>
 
                 <div className="space-y-2">

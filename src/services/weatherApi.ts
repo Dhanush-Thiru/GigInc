@@ -1,9 +1,9 @@
-const API_KEY = import.meta.env.VITE_OPENWEATHER_API_KEY;
+export const OPENWEATHER_API_KEY = import.meta.env.VITE_OPENWEATHER_API_KEY || " your_weather_key is ";
 
 export async function fetchLiveWeather(city: string) {
   try {
     const encodedCity = encodeURIComponent(city.trim());
-    const response = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${encodedCity}&appid=${API_KEY}&units=metric`);
+    const response = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${encodedCity}&appid=${OPENWEATHER_API_KEY}&units=metric`);
     if (!response.ok) {
       throw new Error(`Error fetching weather for ${city}: ${response.status} ${response.statusText}`);
     }
@@ -12,6 +12,7 @@ export async function fetchLiveWeather(city: string) {
       description: data.weather[0].main,
       temp: Math.round(data.main.temp),
       severity: calculateSeverityFromWeather(data.weather[0].main, data.main.temp),
+      coord: data.coord, // Returned from OpenWeather {lat, lon}
       success: true,
     };
   } catch (error) {
@@ -29,7 +30,7 @@ export async function fetchLiveWeather(city: string) {
 
 export async function fetchWeatherByCoords(lat: number, lon: number) {
   try {
-    const response = await fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric`);
+    const response = await fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${OPENWEATHER_API_KEY}&units=metric`);
     if (!response.ok) {
       throw new Error(`Error fetching weather for coords: ${response.status}`);
     }
@@ -39,11 +40,19 @@ export async function fetchWeatherByCoords(lat: number, lon: number) {
       description: data.weather[0].main,
       temp: Math.round(data.main.temp),
       severity: calculateSeverityFromWeather(data.weather[0].main, data.main.temp),
+      coord: { lat, lon },
       success: true,
     };
   } catch (error) {
     console.error("GPS Weather API failed:", error);
-    return { success: false, error: (error as Error).message };
+    return { 
+      name: "Local Area",
+      description: "Haze (API Key missing / Mocked)",
+      temp: 32,
+      severity: 25,
+      success: false, 
+      error: (error as Error).message 
+    };
   }
 }
 
