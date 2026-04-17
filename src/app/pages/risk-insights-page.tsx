@@ -1,10 +1,16 @@
-﻿import { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
 import { Progress } from "../components/ui/progress";
-import { AlertTriangle, Cloud, Wind, TrendingDown, MapPin, Navigation } from "lucide-react";
+import { AlertTriangle, Cloud, Wind, TrendingDown, MapPin, Navigation, Brain, Car, Smartphone } from "lucide-react";
 import { fetchLiveWeather, fetchWeatherByCoords } from "../../services/weatherApi";
 import { useTranslation } from "react-i18next";
+import {
+  loadDisruptionModel,
+  isDisruptionModelReady,
+  predictDisruption,
+  type DisruptionForecast,
+} from "../../services/mlEngine";
 
 export function RiskInsightsPage() {
   const { t } = useTranslation("risk");
@@ -12,6 +18,12 @@ export function RiskInsightsPage() {
   const [locationName, setLocationName] = useState("your area");
   const [weatherData, setWeatherData] = useState({ temp: 32, desc: "Scanning...", severity: 75 });
   const [isLiveGps, setIsLiveGps] = useState(false);
+  const [forecast, setForecast] = useState<DisruptionForecast | null>(null);
+  const [modelReady, setModelReady] = useState(false);
+
+  useEffect(() => {
+    loadDisruptionModel().then((ready) => setModelReady(ready));
+  }, []);
 
   useEffect(() => {
     const fetchRiskData = async () => {
@@ -22,10 +34,12 @@ export function RiskInsightsPage() {
       if (hasFreshTrackedGps) {
         const data = await fetchWeatherByCoords(parsedGps.lat, parsedGps.lon);
         if (data.success) {
-          setLocationName(data.name || "your area");
+          const city = data.name || "Mumbai";
+          setLocationName(city);
           setWeatherData({ temp: data.temp, desc: data.description, severity: data.severity });
           setIsLiveGps(true);
           setLoading(false);
+          runDisruptionModel(city, data.severity, 0);
           return;
         }
       }
@@ -37,10 +51,12 @@ export function RiskInsightsPage() {
             const data = await fetchWeatherByCoords(latitude, longitude);
             if (data.success) {
               localStorage.setItem("insuregig_gps_coords", JSON.stringify({ lat: latitude, lon: longitude, ts: Date.now() }));
-              setLocationName(data.name || "your area");
+              const city = data.name || "Mumbai";
+              setLocationName(city);
               setWeatherData({ temp: data.temp, desc: data.description, severity: data.severity });
               setIsLiveGps(true);
               setLoading(false);
+              runDisruptionModel(city, data.severity, 0);
             } else {
               fallbackToProfile();
             }
@@ -58,43 +74,57 @@ export function RiskInsightsPage() {
       const city = savedUser ? JSON.parse(savedUser).location : "Mumbai";
       setLocationName(city);
       const data = await fetchLiveWeather(city);
-      if (data.success) {
-        setWeatherData({ temp: data.temp, desc: data.description, severity: data.severity });
-      }
+      const severity = data.success ? data.severity : 30;
+      if (data.success) setWeatherData({ temp: data.temp, desc: data.description, severity });
       setLoading(false);
+      runDisruptionModel(city, severity, 0);
     };
 
     fetchRiskData();
   }, []);
 
-  const demandRisk = 18;
-  const aqiRisk = 40;
-  const riskScore = loading
-    ? 55
-    : Math.round(Math.min(100, Math.max(5, weatherData.severity * 0.65 + aqiRisk * 0.2 + demandRisk * 0.15)));
+  const runDisruptionModel = async (city: string, weatherSeverity: number, rainfallMm: number) => {
+    const liveAqi = 120; // placeholder until AQI API is wired
+    const rainProxy = (weatherSeverity / 100) * 60; // proxy from severity
+    const result = await predictDisruption(city, new Date(), liveAqi, rainProxy + rainfallMm);
+    setForecast(result);
+  };
 
-  let riskLevelLabel = t("riskLow");
+  // Use model forecast if available, else fall back to weather-only score
+  const riskScore = forecast
+    ? forecast.overallRisk
+    : loading
+    ? 55
+    : Math.round(Math.min(100, Math.max(5, weatherData.severity * 0.65 + 18 * 0.2 + 40 * 0.15)));
+
+  let riskLevelLabel = t("riskLow") + " 🟢";
   let bgGradient = "from-green-50 to-emerald-50";
   let borderColor = "border-green-200";
   let iconBg = "bg-green-500";
   let textColor = "text-green-600";
 
   if (riskScore > 60) {
-    riskLevelLabel = t("riskHigh");
+    riskLevelLabel = t("riskHigh") + " 🔴";
     bgGradient = "from-orange-50 to-red-50";
     borderColor = "border-orange-200";
     iconBg = "bg-orange-500";
     textColor = "text-orange-600";
   } else if (riskScore > 30) {
-    riskLevelLabel = t("riskMedium");
+    riskLevelLabel = t("riskMedium") + " 🟡";
     bgGradient = "from-yellow-50 to-amber-50";
     borderColor = "border-yellow-200";
     iconBg = "bg-yellow-500";
     textColor = "text-yellow-600";
   }
 
+  const weatherPct  = forecast ? Math.round(forecast.weather  * 100) : weatherData.severity;
+  const aqiPct      = forecast ? Math.round(forecast.aqi      * 100) : 40;
+  const trafficPct  = forecast ? Math.round(forecast.traffic  * 100) : 18;
+  const platformPct = forecast ? Math.round(forecast.platform * 100) : 6;
+
   return (
     <div className="p-6 space-y-6 max-w-5xl mx-auto">
+      {/* Header */}
       <div>
         <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
           {t("title")}
@@ -103,10 +133,17 @@ export function RiskInsightsPage() {
               <Navigation className="w-3 h-3 mr-1" /> {t("liveGpsActive")}
             </Badge>
           )}
+          {forecast && (
+            <Badge className={`text-xs px-2 py-0.5 ${forecast.source === "model" ? "bg-brand-100 text-brand-700 border-brand-200" : "bg-gray-100 text-gray-600 border-gray-200"}`}>
+              <Brain className="w-3 h-3 mr-1" />
+              {forecast.source === "model" ? "ML Model" : "Actuarial"}
+            </Badge>
+          )}
         </h1>
         <p className="text-gray-600 capitalize">{t("subtitle", { location: locationName })}</p>
       </div>
 
+      {/* Overall Risk */}
       <Card className={`${borderColor} bg-gradient-to-br ${bgGradient} transition-colors duration-500`}>
         <CardContent className="pt-6">
           <div className="flex items-center justify-between mb-4">
@@ -127,14 +164,18 @@ export function RiskInsightsPage() {
           </div>
           <Progress value={riskScore} className="h-3 shadow-inner" />
           <p className="text-sm text-gray-700 mt-2 font-medium">
-            {t("aggregatedRisk", { score: riskScore })} - {riskScore > 60 ? t("multipleFactors") : t("standardBaseline")}
+            {t("aggregatedRisk", { score: riskScore })} — {riskScore > 60 ? t("multipleFactors") : t("standardBaseline")}
           </p>
         </CardContent>
       </Card>
 
+      {/* AI Prediction narrative */}
       <Card className="border-brand-200 shadow-sm">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">{t("aiPrediction")}</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <Brain className="w-5 h-5 text-brand-500" />
+            {locationName} {t("aiPrediction")}
+          </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className={`p-4 rounded-lg border ${riskScore > 60 ? "bg-orange-50 border-orange-200" : "bg-brand-50 border-brand-200"}`}>
@@ -148,78 +189,99 @@ export function RiskInsightsPage() {
             </p>
           </div>
           <div className="text-sm text-gray-500 flex items-center justify-between">
-            <p>{t("updatedJustNow")} - {isLiveGps ? t("sourceLiveGps") : t("sourceProfile")}</p>
+            <p>{t("updatedJustNow")} · {isLiveGps ? t("sourceLiveGps") : t("sourceProfile")}</p>
             {isLiveGps && <p className="text-brand-500 font-medium text-xs">{t("latLonSynced")}</p>}
           </div>
         </CardContent>
       </Card>
 
-      <div className="grid md:grid-cols-3 gap-6">
+      {/* Per-disruption type cards */}
+      <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Weather */}
         <Card className="shadow-sm">
-          <CardHeader>
+          <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
-              <CardTitle className="flex items-center gap-2">
-                <Cloud className={`w-5 h-5 ${weatherData.severity > 50 ? "text-brand-500" : "text-gray-500"}`} />
+              <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                <Cloud className={`w-4 h-4 ${weatherPct > 50 ? "text-brand-500" : "text-gray-500"}`} />
                 {t("liveWeather")}
               </CardTitle>
-              {weatherData.severity > 60 ? <Badge className="bg-red-600">{t("severe")}</Badge> : weatherData.severity > 30 ? <Badge className="bg-yellow-500">{t("moderate")}</Badge> : <Badge className="bg-green-600">{t("normal")}</Badge>}
+              {weatherPct > 60
+                ? <Badge className="bg-red-600 text-xs">{t("severe")}</Badge>
+                : weatherPct > 30
+                ? <Badge className="bg-yellow-500 text-xs">{t("moderate")}</Badge>
+                : <Badge className="bg-green-600 text-xs">{t("normal")}</Badge>}
             </div>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              <div>
-                <p className="text-3xl font-bold text-gray-900">{loading ? "..." : `${weatherData.temp}°C`}</p>
-                <p className="text-sm text-gray-600 font-medium capitalize mt-1">{loading ? t("scanning") : weatherData.desc}</p>
-              </div>
-              <Progress value={weatherData.severity} className="h-2" />
-              <p className="text-xs text-gray-500 h-8">{weatherData.severity > 50 ? t("adverseConditions") : t("clearConditions")}</p>
-            </div>
+          <CardContent className="space-y-2">
+            <p className="text-3xl font-bold text-gray-900">{loading ? "..." : `${weatherData.temp}°C`}</p>
+            <p className="text-xs text-gray-500 capitalize">{loading ? t("scanning") : weatherData.desc}</p>
+            <Progress value={weatherPct} className="h-2" />
+            <p className="text-xs text-gray-400">{weatherPct}% severity</p>
           </CardContent>
         </Card>
 
-        <Card className="shadow-sm opacity-90">
-          <CardHeader>
+        {/* AQI */}
+        <Card className="shadow-sm">
+          <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
-              <CardTitle className="flex items-center gap-2 text-gray-700">
-                <Wind className="w-5 h-5 text-gray-400" /> {t("aqiLevel")}
+              <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                <Wind className="w-4 h-4 text-gray-400" /> {t("aqiLevel")}
               </CardTitle>
-              <Badge variant="outline" className="text-gray-500 border-gray-200">{t("moderate")}</Badge>
+              {aqiPct > 60
+                ? <Badge className="bg-red-600 text-xs">{t("severe")}</Badge>
+                : <Badge variant="outline" className="text-gray-500 border-gray-200 text-xs">{t("moderate")}</Badge>}
             </div>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              <div>
-                <p className="text-3xl font-bold text-gray-700">124</p>
-                <p className="text-sm text-gray-500">{t("unhealthySensitive")}</p>
-              </div>
-              <Progress value={40} className="h-2" />
-              <p className="text-xs text-gray-500 h-8">{t("aqiNote")}</p>
-            </div>
+          <CardContent className="space-y-2">
+            <p className="text-3xl font-bold text-gray-700">{Math.round(aqiPct * 4 + 50)}</p>
+            <p className="text-xs text-gray-500">{t("unhealthySensitive")}</p>
+            <Progress value={aqiPct} className="h-2" />
+            <p className="text-xs text-gray-400">{aqiPct}% {t("riskHigh").toLowerCase()} risk</p>
           </CardContent>
         </Card>
 
-        <Card className="shadow-sm opacity-90">
-          <CardHeader>
+        {/* Traffic */}
+        <Card className="shadow-sm">
+          <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
-              <CardTitle className="flex items-center gap-2 text-gray-700">
-                <TrendingDown className="w-5 h-5 text-gray-400" /> {t("liveDemand")}
+              <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                <Car className="w-4 h-4 text-gray-400" /> Traffic
               </CardTitle>
-              <Badge variant="outline" className="text-gray-500 border-gray-200">{t("stable")}</Badge>
+              {trafficPct > 65
+                ? <Badge className="bg-red-600 text-xs">{t("severe")}</Badge>
+                : <Badge variant="outline" className="text-gray-500 border-gray-200 text-xs">{t("stable")}</Badge>}
             </div>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              <div>
-                <p className="text-3xl font-bold text-gray-700">82%</p>
-                <p className="text-sm text-gray-500">{t("capacityRemaining")}</p>
-              </div>
-              <Progress value={82} className="h-2" />
-              <p className="text-xs text-gray-500 h-8">{t("demandNote")}</p>
+          <CardContent className="space-y-2">
+            <p className="text-3xl font-bold text-gray-700">{100 - trafficPct}%</p>
+            <p className="text-xs text-gray-500">{t("capacityRemaining")}</p>
+            <Progress value={trafficPct} className="h-2" />
+            <p className="text-xs text-gray-400">{trafficPct}% congestion level</p>
+          </CardContent>
+        </Card>
+
+        {/* Platform */}
+        <Card className="shadow-sm">
+          <CardHeader className="pb-2">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                <Smartphone className="w-4 h-4 text-gray-400" /> Platform
+              </CardTitle>
+              {platformPct > 30
+                ? <Badge className="bg-yellow-500 text-xs">{t("moderate")}</Badge>
+                : <Badge className="bg-green-600 text-xs">{t("normal")}</Badge>}
             </div>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <p className="text-3xl font-bold text-gray-700">{platformPct}%</p>
+            <p className="text-xs text-gray-500">Outage probability</p>
+            <Progress value={platformPct} className="h-2" />
+            <p className="text-xs text-gray-400">{platformPct < 15 ? "Stable" : "Elevated"} risk</p>
           </CardContent>
         </Card>
       </div>
 
+      {/* Live Risk Map placeholder */}
       <Card className="shadow-sm">
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
@@ -232,7 +294,7 @@ export function RiskInsightsPage() {
         </CardHeader>
         <CardContent>
           <div className="bg-gradient-to-br from-green-100 via-yellow-100 to-red-100 h-64 rounded-lg flex items-center justify-center border relative overflow-hidden shadow-inner">
-            <div className="absolute inset-0 opacity-20" style={{ backgroundImage: "radial-gradient(circle at center, #000 1px, transparent 1px)", backgroundSize: "20px 20px" }}></div>
+            <div className="absolute inset-0 opacity-20" style={{ backgroundImage: "radial-gradient(circle at center, #000 1px, transparent 1px)", backgroundSize: "20px 20px" }} />
             <div className="text-center relative bg-white/80 p-6 rounded-2xl shadow-lg backdrop-blur-sm border border-white">
               <MapPin className={`w-12 h-12 mx-auto mb-2 ${riskScore > 60 ? "text-red-600 animate-bounce" : "text-green-600"}`} />
               <p className="font-bold text-gray-900 text-lg">{riskScore > 60 ? t("highRiskZone") : t("safeOpsZone")}</p>

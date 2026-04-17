@@ -6,6 +6,9 @@ let isTraining = false;
 let premiumModel: tf.LayersModel | null = null;
 let premiumModelLoading = false;
 
+let disruptionModel: tf.LayersModel | null = null;
+let disruptionModelLoading = false;
+
 const CITY_ENC: Record<string, number> = { Metropolitian: 1.0, Urban: 0.5, 'Semi-Urban': 0.0 };
 const WEATHER_ENC: Record<string, number> = { Sunny: 0.0, Cloudy: 0.17, Windy: 0.33, Fog: 0.5, Sandstorms: 0.67, Stormy: 1.0 };
 const TRAFFIC_ENC: Record<string, number> = { Low: 0.0, Medium: 0.33, High: 0.67, Jam: 1.0 };
@@ -328,4 +331,172 @@ export async function predictDisruptionLoss(severityScore: number, demandPercent
   inputTensor.dispose();
   prediction.dispose();
   return result[0];
+}
+
+// ── Disruption Prediction Model ────────────────────────────────────────────────
+// Trained on AQI + rainfall datasets via DisruptionModel_Colab.ipynb
+// Predicts 4 disruption severity scores [weather, aqi, traffic, platform] ∈ [0, 1]
+
+export interface DisruptionForecast {
+  weather: number;
+  aqi: number;
+  traffic: number;
+  platform: number;
+  overallRisk: number;
+  source: 'model' | 'actuarial';
+}
+
+const CITY_COORDS_ENC: Record<string, [number, number]> = {
+  Mumbai:    [19.0760, 72.8777],
+  Delhi:     [28.6139, 77.2090],
+  Bangalore: [12.9716, 77.5946],
+  Hyderabad: [17.3850, 78.4867],
+  Chennai:   [13.0827, 80.2707],
+  Kolkata:   [22.5726, 88.3639],
+  Pune:      [18.5204, 73.8567],
+  Ahmedabad: [23.0225, 72.5714],
+};
+
+const METRO_TRAFFIC_BASE: Record<string, number> = {
+  Mumbai: 0.78, Delhi: 0.75, Bangalore: 0.70,
+  Hyderabad: 0.55, Chennai: 0.60, Kolkata: 0.65,
+  Pune: 0.50, Ahmedabad: 0.45,
+};
+
+export async function loadDisruptionModel(): Promise<boolean> {
+  if (disruptionModel) return true;
+  if (disruptionModelLoading) return false;
+  disruptionModelLoading = true;
+
+  try {
+    disruptionModel = await tf.loadLayersModel('/disruption_model/model.json');
+    console.log('[InsureGig] Disruption model loaded from public/disruption_model.');
+    disruptionModelLoading = false;
+    return true;
+  } catch {
+    console.warn('[InsureGig] Disruption model not found; actuarial fallback active.');
+    disruptionModelLoading = false;
+    return false;
+  }
+}
+
+export function isDisruptionModelReady(): boolean {
+  return disruptionModel !== null;
+}
+
+function buildDisruptionFeatureVector(
+  city: string,
+  date: Date,
+  liveAqi: number,
+  liveRainfallMm: number,
+): number[] {
+  const month = date.getMonth() + 1;
+  const dow   = date.getDay();
+
+  const monthSin = Math.sin(2 * Math.PI * month / 12);
+  const monthCos = Math.cos(2 * Math.PI * month / 12);
+  const dowSin   = Math.sin(2 * Math.PI * dow   / 7);
+  const dowCos   = Math.cos(2 * Math.PI * dow   / 7);
+
+  const isMonsoon   = [6, 7, 8, 9].includes(month) ? 1.0 : 0.0;
+  const isWinterFog = [11, 12, 1, 2].includes(month) ? 1.0 : 0.0;
+
+  const coords = CITY_COORDS_ENC[city] ?? [20.0, 78.0];
+  const latNorm = (coords[0] - 8.0)  / (37.0 - 8.0);
+  const lonNorm = (coords[1] - 68.0) / (97.5 - 68.0);
+
+  const aqiNorm  = Math.min(1.0, liveAqi / 500.0);
+  const rainNorm = Math.min(1.0, liveRainfallMm / 200.0);
+
+  // Without historical lags available at runtime, use current value as proxy
+  return [
+    monthSin, monthCos,
+    dowSin,   dowCos,
+    isMonsoon, isWinterFog,
+    latNorm,   lonNorm,
+    aqiNorm,              // aqi_norm
+    aqiNorm * 0.9,        // aqi_lag1_norm  (slight decay)
+    aqiNorm * 0.75,       // aqi_lag7_norm
+    aqiNorm * 0.85,       // aqi_roll7_norm
+    rainNorm,             // rain_norm
+    rainNorm * 0.8,       // rain_lag1_norm
+    rainNorm * 0.5,       // rain_lag7_norm
+    rainNorm * 0.7,       // rain_roll7_norm
+  ];
+}
+
+/** Actuarial fallback used when the trained model is unavailable */
+function actuarialDisruptionForecast(
+  city: string,
+  date: Date,
+  liveAqi: number,
+  liveRainfallMm: number,
+): DisruptionForecast {
+  const month = date.getMonth() + 1;
+  const isMonsoon = [6, 7, 8, 9].includes(month);
+
+  const weather  = Math.min(1.0, (liveRainfallMm - 10) / 150.0);
+  const aqi      = Math.min(1.0, Math.max(0, (liveAqi - 100) / 300.0));
+  const trafficBase = METRO_TRAFFIC_BASE[city] ?? 0.55;
+  const traffic  = Math.min(1.0, trafficBase * (1 + (liveRainfallMm > 30 ? 0.3 : 0)));
+  const platform = isMonsoon ? 0.12 : 0.06;
+
+  const overallRisk = Math.round(
+    Math.min(100, Math.max(5,
+      weather  * 0.35 * 100 +
+      aqi      * 0.30 * 100 +
+      traffic  * 0.25 * 100 +
+      platform * 0.10 * 100
+    ))
+  );
+
+  return {
+    weather:  Math.max(0, parseFloat(weather.toFixed(3))),
+    aqi:      Math.max(0, parseFloat(aqi.toFixed(3))),
+    traffic:  parseFloat(traffic.toFixed(3)),
+    platform: parseFloat(platform.toFixed(3)),
+    overallRisk,
+    source: 'actuarial',
+  };
+}
+
+export async function predictDisruption(
+  city: string,
+  date: Date = new Date(),
+  liveAqi: number = 120,
+  liveRainfallMm: number = 0,
+): Promise<DisruptionForecast> {
+  if (!disruptionModel) {
+    return actuarialDisruptionForecast(city, date, liveAqi, liveRainfallMm);
+  }
+
+  try {
+    const features = buildDisruptionFeatureVector(city, date, liveAqi, liveRainfallMm);
+    const inputTensor = tf.tensor2d([features]);
+    const output = disruptionModel.predict(inputTensor) as tf.Tensor;
+    const result = await output.data();
+    inputTensor.dispose();
+    output.dispose();
+
+    const [weather, aqi, traffic, platform] = Array.from(result);
+    const overallRisk = Math.round(
+      Math.min(100, Math.max(5,
+        weather  * 0.35 * 100 +
+        aqi      * 0.30 * 100 +
+        traffic  * 0.25 * 100 +
+        platform * 0.10 * 100
+      ))
+    );
+
+    return {
+      weather:  parseFloat(weather.toFixed(3)),
+      aqi:      parseFloat(aqi.toFixed(3)),
+      traffic:  parseFloat(traffic.toFixed(3)),
+      platform: parseFloat(platform.toFixed(3)),
+      overallRisk,
+      source: 'model',
+    };
+  } catch {
+    return actuarialDisruptionForecast(city, date, liveAqi, liveRainfallMm);
+  }
 }
