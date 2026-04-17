@@ -565,7 +565,7 @@ export function LandingPage() {
             transition={{ duration: 0.6 }}
             viewport={{ once: true }}
           >
-            <h2>{t("testimonialsTitle")}</h2>
+            {t("testimonialsTitle")}
           </motion.h2>
 
           <div className="grid md:grid-cols-3 gap-6">
